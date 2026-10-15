@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Yoowifi Corporate Portal - User Management PRFS</title>
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; color: #172033; line-height: 1.45; margin: 42px; font-size: 10.5pt; }
+    :root { --navy: #0f2f55; --blue: #1769aa; --pale-blue: #eaf2fc; --line: #d7e1ec; --canvas: #eef3f8; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #172033; line-height: 1.45; margin: 0; font-size: 10.5pt; background: var(--canvas); }
     h1 { color: #0f172a; font-size: 24pt; margin: 0 0 8px; }
     h2 { color: #123b70; font-size: 16pt; margin-top: 30px; border-bottom: 2px solid #dbeafe; padding-bottom: 5px; }
     h3 { color: #1e3a5f; font-size: 12.5pt; margin-top: 22px; }
@@ -32,21 +35,75 @@
     .page-break { page-break-before: always; }
     .flow { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 14px; margin: 8px 0 14px; font-family: Menlo, Consolas, monospace; white-space: pre-wrap; }
     .checkbox { font-family: Arial, sans-serif; }
+    .feature-nav { position: sticky; top: 0; z-index: 1000; color: #fff; background: rgba(15, 47, 85, 0.98); border-bottom: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 8px 24px rgba(15, 47, 85, 0.18); }
+    .feature-nav__inner { width: min(1180px, 100%); margin: 0 auto; padding: 12px 24px 14px; }
+    .feature-nav__heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 11px; }
+    .feature-nav__brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .feature-nav__mark { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 10px; color: var(--navy); background: #fff; font-size: 15px; font-weight: 800; }
+    .feature-nav__eyebrow { margin: 0 0 1px; color: #a9cceb; font-size: 8pt; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
+    .feature-nav__title { margin: 0; color: #fff; font-size: 13pt; line-height: 1.2; }
+    .feature-nav__meta { margin: 0; flex: 0 0 auto; color: #d7e7f5; font-size: 9pt; }
+    .feature-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 1px 0 2px; scrollbar-width: thin; scrollbar-color: #8eb9dd transparent; }
+    .feature-tab { appearance: none; flex: 0 0 auto; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 999px; padding: 7px 12px; color: #e8f2fb; background: rgba(255, 255, 255, 0.07); font: inherit; font-size: 9.5pt; font-weight: 700; white-space: nowrap; cursor: pointer; transition: color 160ms ease, background 160ms ease, border-color 160ms ease; }
+    .feature-tab:hover { background: rgba(255, 255, 255, 0.14); }
+    .feature-tab[aria-selected="true"] { color: var(--navy); background: #fff; border-color: #fff; }
+    .feature-tab:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    .feature-panel { width: min(1120px, calc(100% - 40px)); min-height: calc(100vh - 160px); margin: 28px auto 48px; padding: 32px 38px 46px; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 55px rgba(30, 58, 95, 0.09); scroll-margin-top: 145px; }
+    .feature-panel[hidden] { display: none !important; }
+    .feature-panel > h2:first-child { margin-top: 0; }
     @media screen and (max-width: 720px) {
-      body { margin: 20px 14px; font-size: 10pt; }
+      body { margin: 0; font-size: 10pt; }
       h1 { font-size: 20pt; }
       h2 { font-size: 14pt; }
       .cover { padding: 48px 16px 40px; }
       .cover .subtitle { font-size: 13pt; }
       .cover .meta { margin-top: 32px; }
+      .feature-nav__inner { padding: 10px 14px 12px; }
+      .feature-nav__heading { margin-bottom: 9px; }
+      .feature-nav__meta { display: none; }
+      .feature-nav__title { font-size: 11.5pt; }
+      .feature-tab { padding: 6px 10px; font-size: 9pt; }
+      .feature-panel { width: calc(100% - 20px); margin: 14px auto 30px; padding: 18px 14px 30px; border-radius: 14px; }
       table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       th, td { min-width: 130px; }
       pre, .flow { overflow-x: auto; }
     }
-    @media print { body { margin: 22mm 18mm; } .cover { page-break-after: always; } }
+    @media print {
+      body { margin: 22mm 18mm; background: #fff; }
+      .feature-nav { display: none; }
+      .feature-panel, .feature-panel[hidden] { display: block !important; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .cover { page-break-after: always; }
+    }
   </style>
 </head>
 <body>
+  <header class="feature-nav" aria-label="Document feature navigation">
+    <div class="feature-nav__inner">
+      <div class="feature-nav__heading">
+        <div class="feature-nav__brand">
+          <span class="feature-nav__mark" aria-hidden="true">Y</span>
+          <div>
+            <p class="feature-nav__eyebrow">Yoowifi Corporate Portal</p>
+            <p class="feature-nav__title">Product flows &amp; requirements</p>
+          </div>
+        </div>
+        <p class="feature-nav__meta">PRFS-USR-001 · v0.2</p>
+      </div>
+      <nav class="feature-tabs" role="tablist" aria-label="Choose a feature">
+        <button class="feature-tab" id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="panel-overview" data-feature="overview">Overview</button>
+        <button class="feature-tab" id="tab-load-users" type="button" role="tab" aria-selected="false" aria-controls="panel-load-users" data-feature="load-users">Load users</button>
+        <button class="feature-tab" id="tab-search-export" type="button" role="tab" aria-selected="false" aria-controls="panel-search-export" data-feature="search-export">Search &amp; export</button>
+        <button class="feature-tab" id="tab-create-user" type="button" role="tab" aria-selected="false" aria-controls="panel-create-user" data-feature="create-user">Create user</button>
+        <button class="feature-tab" id="tab-edit-user" type="button" role="tab" aria-selected="false" aria-controls="panel-edit-user" data-feature="edit-user">Edit user</button>
+        <button class="feature-tab" id="tab-user-status" type="button" role="tab" aria-selected="false" aria-controls="panel-user-status" data-feature="user-status">Status</button>
+        <button class="feature-tab" id="tab-delete-user" type="button" role="tab" aria-selected="false" aria-controls="panel-delete-user" data-feature="delete-user">Delete</button>
+        <button class="feature-tab" id="tab-cards" type="button" role="tab" aria-selected="false" aria-controls="panel-cards" data-feature="cards">Cards</button>
+        <button class="feature-tab" id="tab-support" type="button" role="tab" aria-selected="false" aria-controls="panel-support" data-feature="support">Support</button>
+        <button class="feature-tab" id="tab-governance" type="button" role="tab" aria-selected="false" aria-controls="panel-governance" data-feature="governance">Governance</button>
+        <button class="feature-tab" id="tab-bulk-topup" type="button" role="tab" aria-selected="false" aria-controls="panel-bulk-topup" data-feature="bulk-topup">Bulk top-up</button>
+      </nav>
+    </div>
+  </header>
   <div class="cover">
     <h1>Product Requirements &amp; Flow Specification</h1>
     <p class="subtitle">Yoowifi Corporate Portal — User Management Component with Bulk Top-up Token Addendum</p>
@@ -966,5 +1023,93 @@ if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`;</code></pre>
   </div>
 
   <p class="small">End of PRFS-USR-001 version 0.2.</p>
+
+  <script>
+    (() => {
+      const nav = document.querySelector('.feature-nav');
+      const tabList = document.querySelector('.feature-tabs');
+      const tabs = Array.from(document.querySelectorAll('.feature-tab'));
+      const script = document.currentScript;
+      const panels = new Map();
+
+      const featureForHeading = (heading) => {
+        const text = heading.trim();
+        if (/^9\./.test(text)) return 'load-users';
+        if (/^10\./.test(text)) return 'search-export';
+        if (/^11\./.test(text)) return 'create-user';
+        if (/^12\./.test(text)) return 'edit-user';
+        if (/^13\./.test(text)) return 'user-status';
+        if (/^14\./.test(text)) return 'delete-user';
+        if (/^(15|16)\./.test(text)) return 'cards';
+        if (/^17\./.test(text)) return 'support';
+        if (/^(18|19|20|21|22|23|24|25)\./.test(text)) return 'governance';
+        if (/^Appendix [AB]/.test(text)) return 'governance';
+        if (/^Appendix C/.test(text)) return 'bulk-topup';
+        return 'overview';
+      };
+
+      tabs.forEach((tab) => {
+        const feature = tab.dataset.feature;
+        const panel = document.createElement('main');
+        panel.className = 'feature-panel';
+        panel.id = `panel-${feature}`;
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tab.id);
+        panels.set(feature, panel);
+        document.body.insertBefore(panel, script);
+      });
+
+      let currentFeature = 'overview';
+      const contentNodes = Array.from(document.body.children).filter((node) => node !== nav && node !== script && !node.classList.contains('feature-panel'));
+
+      contentNodes.forEach((node) => {
+        if (node.tagName === 'H2') currentFeature = featureForHeading(node.textContent);
+        panels.get(currentFeature).appendChild(node);
+      });
+
+      const selectFeature = (requestedFeature, updateUrl = true) => {
+        const feature = panels.has(requestedFeature) ? requestedFeature : 'overview';
+
+        panels.forEach((panel, panelFeature) => {
+          panel.hidden = panelFeature !== feature;
+        });
+
+        tabs.forEach((tab) => {
+          const selected = tab.dataset.feature === feature;
+          tab.setAttribute('aria-selected', String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+          if (selected) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        });
+
+        if (updateUrl) {
+          history.replaceState(null, '', `#${feature}`);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => selectFeature(tab.dataset.feature));
+      });
+
+      tabList.addEventListener('keydown', (event) => {
+        const currentIndex = tabs.indexOf(document.activeElement);
+        if (currentIndex < 0) return;
+
+        let nextIndex = currentIndex;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        else if (event.key === 'Home') nextIndex = 0;
+        else if (event.key === 'End') nextIndex = tabs.length - 1;
+        else return;
+
+        event.preventDefault();
+        tabs[nextIndex].focus();
+        selectFeature(tabs[nextIndex].dataset.feature);
+      });
+
+      window.addEventListener('hashchange', () => selectFeature(location.hash.slice(1), false));
+      selectFeature(location.hash.slice(1) || 'overview', false);
+    })();
+  </script>
 </body>
 </html>
