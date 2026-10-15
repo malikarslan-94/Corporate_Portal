@@ -1,29 +1,25 @@
-# PRFS website deployment
+# Corporate Portal PRFS
 
-This repository is configured to publish the contents of `docs/` as a static
-website on Vercel. No portal application build or dependency installation is
-required for this documentation site.
+Static web documentation for the Yoowifi Corporate Portal flows.
 
-## One-time setup
+## Vercel setup
 
-1. Create a GitHub repository and push this project to it.
-2. In Vercel, choose **Add New > Project** and import that GitHub repository.
-3. Keep the project **Root Directory** set to the repository root (`./`).
-4. Vercel will read `vercel.json`; confirm that the framework is **Other** and
-   the output directory is `docs`.
+1. Open [Vercel's new project page](https://vercel.com/new).
+2. Import `malikarslan-94/Corporate_Portal` from GitHub.
+3. Keep the **Root Directory** set to the repository root (`./`).
+4. Confirm **Framework Preset** is `Other` and **Output Directory** is `docs`.
 5. Select **Deploy**.
 
-The generated Vercel domain opens `docs/user-management-prfs.html` at `/`.
-The document is also available at `/user-management-prfs`.
+The generated Vercel domain opens the main PRFS document at `/`. The same
+document is also available at `/user-management-prfs`.
 
 ## Automatic publishing
 
-- Pushes to Vercel's production branch (normally `main`) are deployed live.
-- Pushes to any other branch receive a Vercel preview URL.
-- Updating `docs/user-management-prfs.html` and pushing the commit updates the
-  live document automatically.
-- A new flow can be added as `docs/example-flow.html`; after pushing it, its
-  clean URL is `/example-flow`.
+- Every push to `main` creates a production deployment.
+- Pushes to other branches create preview deployments.
+- Update `docs/user-management-prfs.html` and push the commit to update the
+  live document.
+- Add a flow as `docs/example-flow.html` to publish it at `/example-flow`.
 
-There is no separate GitHub Actions workflow to maintain. The GitHub–Vercel
-integration performs the deployment automatically.
+Vercel reads `vercel.json`, skips dependency installation and application
+builds, and publishes only the files in `docs/`.
