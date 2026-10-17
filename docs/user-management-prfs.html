@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Yoowifi Corporate Portal - User Management PRFS</title>
+  <title>Yoowifi Corporate Portal - Product Flow Library</title>
   <style>
     :root { --navy: #0f2f55; --blue: #1769aa; --pale-blue: #eaf2fc; --line: #d7e1ec; --canvas: #eef3f8; }
     * { box-sizing: border-box; }
@@ -35,19 +35,32 @@
     .page-break { page-break-before: always; }
     .flow { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 14px; margin: 8px 0 14px; font-family: Menlo, Consolas, monospace; white-space: pre-wrap; }
     .checkbox { font-family: Arial, sans-serif; }
-    .feature-nav { position: sticky; top: 0; z-index: 1000; color: #fff; background: rgba(15, 47, 85, 0.98); border-bottom: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 8px 24px rgba(15, 47, 85, 0.18); }
-    .feature-nav__inner { width: min(1180px, 100%); margin: 0 auto; padding: 12px 24px 14px; }
-    .feature-nav__heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 11px; }
-    .feature-nav__brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
-    .feature-nav__mark { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 10px; color: var(--navy); background: #fff; font-size: 15px; font-weight: 800; }
-    .feature-nav__eyebrow { margin: 0 0 1px; color: #a9cceb; font-size: 8pt; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
-    .feature-nav__title { margin: 0; color: #fff; font-size: 13pt; line-height: 1.2; }
-    .feature-nav__meta { margin: 0; flex: 0 0 auto; color: #d7e7f5; font-size: 9pt; }
-    .feature-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 1px 0 2px; scrollbar-width: thin; scrollbar-color: #8eb9dd transparent; }
-    .feature-tab { appearance: none; flex: 0 0 auto; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 999px; padding: 7px 12px; color: #e8f2fb; background: rgba(255, 255, 255, 0.07); font: inherit; font-size: 9.5pt; font-weight: 700; white-space: nowrap; cursor: pointer; transition: color 160ms ease, background 160ms ease, border-color 160ms ease; }
-    .feature-tab:hover { background: rgba(255, 255, 255, 0.14); }
-    .feature-tab[aria-selected="true"] { color: var(--navy); background: #fff; border-color: #fff; }
-    .feature-tab:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    .site-header { position: sticky; top: 0; z-index: 1000; color: #fff; background: rgba(15, 47, 85, 0.99); border-bottom: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 8px 24px rgba(15, 47, 85, 0.18); }
+    .site-header__inner { width: min(1280px, 100%); margin: 0 auto; padding: 12px 24px 14px; }
+    .site-header__heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 11px; }
+    .site-header__brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .site-header__mark { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px; color: var(--navy); background: #fff; font-size: 15px; font-weight: 800; }
+    .site-header__eyebrow { margin: 0 0 1px; color: #a9cceb; font-size: 8pt; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
+    .site-header__title { margin: 0; color: #fff; font-size: 13pt; line-height: 1.2; }
+    .site-header__meta { margin: 0; flex: 0 0 auto; color: #d7e7f5; font-size: 9pt; }
+    .mobile-nav-toggle { display: none; width: 100%; align-items: center; justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 10px; padding: 9px 11px; color: #fff; background: rgba(255, 255, 255, 0.08); font: inherit; font-weight: 700; cursor: pointer; }
+    .module-nav { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+    .module-menu { position: relative; }
+    .module-trigger { appearance: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 8px; padding: 7px 10px; color: #e8f2fb; background: rgba(255, 255, 255, 0.06); font: inherit; font-size: 9.25pt; font-weight: 700; white-space: nowrap; cursor: pointer; transition: color 160ms ease, background 160ms ease, border-color 160ms ease; }
+    .module-trigger::after { content: ''; width: 6px; height: 6px; margin-top: -3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform 160ms ease; }
+    .module-trigger:hover, .module-trigger[aria-expanded="true"] { background: rgba(255, 255, 255, 0.14); }
+    .module-trigger.is-active { color: var(--navy); background: #fff; border-color: #fff; }
+    .module-trigger[aria-expanded="true"]::after { margin-top: 3px; transform: rotate(225deg); }
+    .module-trigger:focus-visible, .flow-menu__item:focus-visible, .mobile-nav-toggle:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    .flow-menu { position: absolute; top: calc(100% + 9px); left: 0; z-index: 1100; display: none; width: max-content; min-width: 245px; max-width: min(360px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 150px)); overflow-y: auto; padding: 7px; color: #172033; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 45px rgba(15, 47, 85, 0.24); }
+    .module-menu.is-open .flow-menu { display: grid; gap: 3px; }
+    .module-menu:nth-last-child(-n+2) .flow-menu { right: 0; left: auto; }
+    .flow-menu__label { margin: 2px 7px 5px; color: #64748b; font-size: 8pt; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .flow-menu__item { appearance: none; width: 100%; border: 0; border-radius: 8px; padding: 9px 10px; color: #24364b; background: transparent; font: inherit; font-size: 9.5pt; line-height: 1.35; text-align: left; cursor: pointer; }
+    .flow-menu__item:hover { color: var(--navy); background: var(--pale-blue); }
+    .flow-menu__item.is-active { color: #0f4f85; background: #dbeafe; font-weight: 800; }
+    .flow-menu__item:disabled { color: #94a3b8; background: #f8fafc; cursor: not-allowed; }
+    .flow-menu__item:disabled::before { content: 'Planned · '; font-weight: 800; }
     .feature-panel { width: min(1120px, calc(100% - 40px)); min-height: calc(100vh - 160px); margin: 28px auto 48px; padding: 32px 38px 46px; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 55px rgba(30, 58, 95, 0.09); scroll-margin-top: 145px; }
     .feature-panel[hidden] { display: none !important; }
     .feature-panel > h2:first-child { margin-top: 0; }
@@ -58,11 +71,16 @@
       .cover { padding: 48px 16px 40px; }
       .cover .subtitle { font-size: 13pt; }
       .cover .meta { margin-top: 32px; }
-      .feature-nav__inner { padding: 10px 14px 12px; }
-      .feature-nav__heading { margin-bottom: 9px; }
-      .feature-nav__meta { display: none; }
-      .feature-nav__title { font-size: 11.5pt; }
-      .feature-tab { padding: 6px 10px; font-size: 9pt; }
+      .site-header { position: relative; }
+      .site-header__inner { padding: 10px 14px 12px; }
+      .site-header__heading { margin-bottom: 9px; }
+      .site-header__meta { display: none; }
+      .site-header__title { font-size: 11.5pt; }
+      .mobile-nav-toggle { display: flex; }
+      .module-nav { display: none; margin-top: 8px; padding: 6px; background: rgba(4, 26, 50, 0.48); border-radius: 12px; }
+      .module-nav.is-expanded { display: grid; grid-template-columns: 1fr; }
+      .module-trigger { width: 100%; justify-content: space-between; padding: 9px 10px; }
+      .flow-menu, .module-menu:nth-last-child(-n+2) .flow-menu { position: static; width: 100%; max-width: none; max-height: none; margin-top: 4px; box-shadow: none; }
       .feature-panel { width: calc(100% - 20px); margin: 14px auto 30px; padding: 18px 14px 30px; border-radius: 14px; }
       table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       th, td { min-width: 130px; }
@@ -70,37 +88,86 @@
     }
     @media print {
       body { margin: 22mm 18mm; background: #fff; }
-      .feature-nav { display: none; }
+      .site-header { display: none; }
       .feature-panel, .feature-panel[hidden] { display: block !important; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
       .cover { page-break-after: always; }
     }
   </style>
 </head>
 <body>
-  <header class="feature-nav" aria-label="Document feature navigation">
-    <div class="feature-nav__inner">
-      <div class="feature-nav__heading">
-        <div class="feature-nav__brand">
-          <span class="feature-nav__mark" aria-hidden="true">Y</span>
+  <header class="site-header" aria-label="Product documentation navigation">
+    <div class="site-header__inner">
+      <div class="site-header__heading">
+        <div class="site-header__brand">
+          <span class="site-header__mark" aria-hidden="true">Y</span>
           <div>
-            <p class="feature-nav__eyebrow">Yoowifi Corporate Portal</p>
-            <p class="feature-nav__title">Product flows &amp; requirements</p>
+            <p class="site-header__eyebrow">Yoowifi Corporate Portal</p>
+            <p class="site-header__title">Product flow library</p>
           </div>
         </div>
-        <p class="feature-nav__meta">PRFS-USR-001 · v0.2</p>
+        <p class="site-header__meta">User flows · PRFS-USR-001 v0.2</p>
       </div>
-      <nav class="feature-tabs" role="tablist" aria-label="Choose a feature">
-        <button class="feature-tab" id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="panel-overview" data-feature="overview">Overview</button>
-        <button class="feature-tab" id="tab-load-users" type="button" role="tab" aria-selected="false" aria-controls="panel-load-users" data-feature="load-users">Load users</button>
-        <button class="feature-tab" id="tab-search-export" type="button" role="tab" aria-selected="false" aria-controls="panel-search-export" data-feature="search-export">Search &amp; export</button>
-        <button class="feature-tab" id="tab-create-user" type="button" role="tab" aria-selected="false" aria-controls="panel-create-user" data-feature="create-user">Create user</button>
-        <button class="feature-tab" id="tab-edit-user" type="button" role="tab" aria-selected="false" aria-controls="panel-edit-user" data-feature="edit-user">Edit user</button>
-        <button class="feature-tab" id="tab-user-status" type="button" role="tab" aria-selected="false" aria-controls="panel-user-status" data-feature="user-status">Status</button>
-        <button class="feature-tab" id="tab-delete-user" type="button" role="tab" aria-selected="false" aria-controls="panel-delete-user" data-feature="delete-user">Delete</button>
-        <button class="feature-tab" id="tab-cards" type="button" role="tab" aria-selected="false" aria-controls="panel-cards" data-feature="cards">Cards</button>
-        <button class="feature-tab" id="tab-support" type="button" role="tab" aria-selected="false" aria-controls="panel-support" data-feature="support">Support</button>
-        <button class="feature-tab" id="tab-governance" type="button" role="tab" aria-selected="false" aria-controls="panel-governance" data-feature="governance">Governance</button>
-        <button class="feature-tab" id="tab-bulk-topup" type="button" role="tab" aria-selected="false" aria-controls="panel-bulk-topup" data-feature="bulk-topup">Bulk top-up</button>
+      <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="module-navigation">Browse portal modules <span aria-hidden="true">☰</span></button>
+      <nav class="module-nav" id="module-navigation" aria-label="Portal modules">
+        <div class="module-menu" data-module="dashboard">
+          <button class="module-trigger" type="button" aria-expanded="false">Dashboard</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Dashboard flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="order">
+          <button class="module-trigger" type="button" aria-expanded="false">Place Order</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Place Order flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="bulktopup">
+          <button class="module-trigger" type="button" aria-expanded="false">Bulk Topup</button>
+          <div class="flow-menu" role="menu">
+            <p class="flow-menu__label">Bulk Topup flows</p>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="bulk-topup">TOP-F01 · Bulk top-up &amp; token resolution</button>
+          </div>
+        </div>
+        <div class="module-menu is-active" data-module="users">
+          <button class="module-trigger is-active" type="button" aria-expanded="false">Users</button>
+          <div class="flow-menu" role="menu">
+            <p class="flow-menu__label">User Management flows</p>
+            <button class="flow-menu__item is-active" type="button" role="menuitem" data-flow="overview">Overview &amp; current state</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="load-users">USR-F01 · Open &amp; load users</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="search-export">USR-F02 · Search, sort, paginate &amp; export</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="create-user">USR-F03 · Create user</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="edit-user">USR-F04 · Edit user</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="user-status">USR-F05 · Suspend or reactivate</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="delete-user">USR-F06 · Delete user</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="cards">USR-F07/F08 · Assign or remove card</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="support">USR-F09 · Open user in Support</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="governance">Rules, risks, tests &amp; governance</button>
+          </div>
+        </div>
+        <div class="module-menu" data-module="devices">
+          <button class="module-trigger" type="button" aria-expanded="false">Devices</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Device flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="inventory">
+          <button class="module-trigger" type="button" aria-expanded="false">Inventory</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Inventory flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="orders">
+          <button class="module-trigger" type="button" aria-expanded="false">Order History</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Order History flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="support">
+          <button class="module-trigger" type="button" aria-expanded="false">Support</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Support flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="statement">
+          <button class="module-trigger" type="button" aria-expanded="false">Transactions</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Transaction flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="corpcard">
+          <button class="module-trigger" type="button" aria-expanded="false">Corporate Card</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Corporate Card flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="returndevice">
+          <button class="module-trigger" type="button" aria-expanded="false">Return Device</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Return Device flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
       </nav>
     </div>
   </header>
@@ -1026,11 +1093,27 @@ if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`;</code></pre>
 
   <script>
     (() => {
-      const nav = document.querySelector('.feature-nav');
-      const tabList = document.querySelector('.feature-tabs');
-      const tabs = Array.from(document.querySelectorAll('.feature-tab'));
+      const header = document.querySelector('.site-header');
+      const moduleNav = document.querySelector('.module-nav');
+      const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
+      const moduleMenus = Array.from(document.querySelectorAll('.module-menu'));
+      const moduleTriggers = Array.from(document.querySelectorAll('.module-trigger'));
+      const flowItems = Array.from(document.querySelectorAll('.flow-menu__item[data-flow]'));
       const script = document.currentScript;
       const panels = new Map();
+      const flowOrder = [
+        'overview',
+        'load-users',
+        'search-export',
+        'create-user',
+        'edit-user',
+        'user-status',
+        'delete-user',
+        'cards',
+        'support',
+        'governance',
+        'bulk-topup'
+      ];
 
       const featureForHeading = (heading) => {
         const text = heading.trim();
@@ -1048,67 +1131,124 @@ if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`;</code></pre>
         return 'overview';
       };
 
-      tabs.forEach((tab) => {
-        const feature = tab.dataset.feature;
+      flowOrder.forEach((feature) => {
+        const flowItem = flowItems.find((item) => item.dataset.flow === feature);
         const panel = document.createElement('main');
         panel.className = 'feature-panel';
         panel.id = `panel-${feature}`;
-        panel.setAttribute('role', 'tabpanel');
-        panel.setAttribute('aria-labelledby', tab.id);
+        panel.setAttribute('role', 'region');
+        panel.setAttribute('aria-label', flowItem?.textContent.trim() || feature);
         panels.set(feature, panel);
         document.body.insertBefore(panel, script);
       });
 
       let currentFeature = 'overview';
-      const contentNodes = Array.from(document.body.children).filter((node) => node !== nav && node !== script && !node.classList.contains('feature-panel'));
+      const contentNodes = Array.from(document.body.children).filter((node) => node !== header && node !== script && !node.classList.contains('feature-panel'));
 
       contentNodes.forEach((node) => {
         if (node.tagName === 'H2') currentFeature = featureForHeading(node.textContent);
         panels.get(currentFeature).appendChild(node);
       });
 
+      const closeModuleMenus = () => {
+        moduleMenus.forEach((menu) => menu.classList.remove('is-open'));
+        moduleTriggers.forEach((trigger) => trigger.setAttribute('aria-expanded', 'false'));
+      };
+
+      const moduleForFlow = (feature) => {
+        return flowItems.find((item) => item.dataset.flow === feature)?.closest('.module-menu')?.dataset.module || 'users';
+      };
+
       const selectFeature = (requestedFeature, updateUrl = true) => {
         const feature = panels.has(requestedFeature) ? requestedFeature : 'overview';
+        const activeModule = moduleForFlow(feature);
 
         panels.forEach((panel, panelFeature) => {
           panel.hidden = panelFeature !== feature;
         });
 
-        tabs.forEach((tab) => {
-          const selected = tab.dataset.feature === feature;
-          tab.setAttribute('aria-selected', String(selected));
-          tab.tabIndex = selected ? 0 : -1;
-          if (selected) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        flowItems.forEach((item) => {
+          const selected = item.dataset.flow === feature;
+          item.classList.toggle('is-active', selected);
+          item.setAttribute('aria-current', selected ? 'page' : 'false');
         });
 
+        moduleMenus.forEach((menu) => {
+          const selected = menu.dataset.module === activeModule;
+          menu.classList.toggle('is-active', selected);
+          menu.querySelector('.module-trigger')?.classList.toggle('is-active', selected);
+        });
+
+        const meta = document.querySelector('.site-header__meta');
+        if (meta) meta.textContent = activeModule === 'bulktopup' ? 'Bulk Topup · PRFS-TOP-ADD-001' : 'User flows · PRFS-USR-001 v0.2';
+
+        closeModuleMenus();
+
         if (updateUrl) {
-          history.replaceState(null, '', `#${feature}`);
+          history.replaceState(null, '', `#${activeModule}/${feature}`);
+          moduleNav.classList.remove('is-expanded');
+          mobileNavToggle.setAttribute('aria-expanded', 'false');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       };
 
-      tabs.forEach((tab) => {
-        tab.addEventListener('click', () => selectFeature(tab.dataset.feature));
+      moduleMenus.forEach((menu, index) => {
+        const trigger = menu.querySelector('.module-trigger');
+        const flowMenu = menu.querySelector('.flow-menu');
+        const menuId = `flow-menu-${menu.dataset.module}`;
+        flowMenu.id = menuId;
+        trigger.setAttribute('aria-controls', menuId);
+        trigger.setAttribute('aria-haspopup', 'menu');
+
+        trigger.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const willOpen = !menu.classList.contains('is-open');
+          closeModuleMenus();
+          if (willOpen) {
+            menu.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+          }
+        });
+
+        trigger.addEventListener('keydown', (event) => {
+          if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+            event.preventDefault();
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            moduleTriggers[(index + offset + moduleTriggers.length) % moduleTriggers.length].focus();
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            trigger.click();
+            flowMenu.querySelector('.flow-menu__item:not(:disabled)')?.focus();
+          }
+        });
       });
 
-      tabList.addEventListener('keydown', (event) => {
-        const currentIndex = tabs.indexOf(document.activeElement);
-        if (currentIndex < 0) return;
-
-        let nextIndex = currentIndex;
-        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
-        else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-        else if (event.key === 'Home') nextIndex = 0;
-        else if (event.key === 'End') nextIndex = tabs.length - 1;
-        else return;
-
-        event.preventDefault();
-        tabs[nextIndex].focus();
-        selectFeature(tabs[nextIndex].dataset.feature);
+      flowItems.forEach((item) => {
+        item.addEventListener('click', () => selectFeature(item.dataset.flow));
       });
 
-      window.addEventListener('hashchange', () => selectFeature(location.hash.slice(1), false));
-      selectFeature(location.hash.slice(1) || 'overview', false);
+      mobileNavToggle.addEventListener('click', () => {
+        const expanded = moduleNav.classList.toggle('is-expanded');
+        mobileNavToggle.setAttribute('aria-expanded', String(expanded));
+        if (!expanded) closeModuleMenus();
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('.module-menu')) closeModuleMenus();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeModuleMenus();
+          moduleNav.classList.remove('is-expanded');
+          mobileNavToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      const featureFromHash = () => location.hash.slice(1).split('/').filter(Boolean).pop() || 'overview';
+      window.addEventListener('hashchange', () => selectFeature(featureFromHash(), false));
+      selectFeature(featureFromHash(), false);
     })();
   </script>
 </body>
