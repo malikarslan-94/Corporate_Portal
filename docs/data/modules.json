@@ -1,0 +1,20 @@
+{
+  "modules": [
+    { "id": "dashboard", "label": "Dashboard", "status": "planned", "flows": [] },
+    { "id": "order", "label": "Place Order", "status": "planned", "flows": [] },
+    { "id": "bulktopup", "label": "Bulk Topup", "status": "planned", "flows": [] },
+    {
+      "id": "users",
+      "label": "Users",
+      "status": "documented",
+      "flows": ["USR-F01", "USR-F02", "USR-F03", "USR-F04", "USR-F05", "USR-F06", "USR-F07", "USR-F08", "USR-F09"]
+    },
+    { "id": "devices", "label": "Devices", "status": "planned", "flows": [] },
+    { "id": "inventory", "label": "Inventory", "status": "planned", "flows": [] },
+    { "id": "orders", "label": "Order History", "status": "planned", "flows": [] },
+    { "id": "support", "label": "Support", "status": "planned", "flows": [] },
+    { "id": "statement", "label": "Transactions", "status": "planned", "flows": [] },
+    { "id": "corpcard", "label": "Corporate Card", "status": "planned", "flows": [] },
+    { "id": "returndevice", "label": "Return Device", "status": "planned", "flows": [] }
+  ]
+}

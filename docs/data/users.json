@@ -1,0 +1,502 @@
+{
+  "module": {
+    "id": "users",
+    "label": "Users",
+    "title": "User Management",
+    "documentId": "PRFS-USR-001",
+    "version": "0.2",
+    "status": "Draft for business review",
+    "route": "/admin/users",
+    "updated": "2026-10-17",
+    "summary": "Manage corporate users within the authenticated operator's approved partner and source scope."
+  },
+  "legend": [
+    { "type": "user", "label": "Operator action" },
+    { "type": "system", "label": "System/API operation" },
+    { "type": "decision", "label": "Decision or branch" },
+    { "type": "outcome", "label": "Result or ready state" },
+    { "type": "gap", "label": "Known risk or gap" }
+  ],
+  "map": {
+    "nodes": [
+      { "key": "f01", "flowId": "USR-F01", "type": "system", "x": 50, "y": 8 },
+      { "key": "list", "title": "User list ready", "subtitle": "Choose a table action or a user", "type": "outcome", "x": 50, "y": 25 },
+      { "key": "f02", "flowId": "USR-F02", "type": "user", "x": 82, "y": 25 },
+      { "key": "f03", "flowId": "USR-F03", "type": "user", "x": 18, "y": 45 },
+      { "key": "selected", "title": "Existing user selected", "subtitle": "Choose a row-level action", "type": "decision", "x": 50, "y": 45 },
+      { "key": "f04", "flowId": "USR-F04", "type": "user", "x": 8, "y": 68 },
+      { "key": "f05", "flowId": "USR-F05", "type": "user", "x": 27, "y": 68 },
+      { "key": "f06", "flowId": "USR-F06", "type": "gap", "x": 46, "y": 68 },
+      { "key": "card", "title": "Card associated?", "subtitle": "Branch by current card state", "type": "decision", "x": 67, "y": 68 },
+      { "key": "f09", "flowId": "USR-F09", "type": "user", "x": 90, "y": 68 },
+      { "key": "f07", "flowId": "USR-F07", "type": "user", "x": 60, "y": 89 },
+      { "key": "f08", "flowId": "USR-F08", "type": "user", "x": 76, "y": 89 }
+    ],
+    "edges": [
+      { "from": "f01", "to": "list", "label": "success" },
+      { "from": "list", "to": "f02", "label": "table tools" },
+      { "from": "list", "to": "f03", "label": "add user" },
+      { "from": "list", "to": "selected", "label": "select row" },
+      { "from": "selected", "to": "f04", "label": "edit" },
+      { "from": "selected", "to": "f05", "label": "status" },
+      { "from": "selected", "to": "f06", "label": "delete" },
+      { "from": "selected", "to": "card", "label": "card" },
+      { "from": "selected", "to": "f09", "label": "support" },
+      { "from": "card", "to": "f07", "label": "none" },
+      { "from": "card", "to": "f08", "label": "exists" }
+    ]
+  },
+  "flows": [
+    {
+      "id": "USR-F01",
+      "title": "Open and load corporate users",
+      "shortTitle": "Open & load users",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Authenticated Corporate Portal Operator",
+      "trigger": "Select Users or navigate to /admin/users.",
+      "summary": "Load only the corporate users belonging to the operator's authorized partner scope and distinguish loading, empty, error, and unauthorized states.",
+      "preconditions": [
+        "The operator is authenticated.",
+        "The login state contains the corporate user ID and portal source.",
+        "The operator is authorized to view users."
+      ],
+      "outcome": "The authorized user list is visible, or a distinct empty, error, or unauthorized state is shown.",
+      "steps": [
+        { "type": "user", "title": "Open Users", "detail": "The operator selects Users in the portal navigation." },
+        { "type": "system", "title": "Build scoped request", "detail": "The page uses the logged-in user ID as partner_id and includes the portal source." },
+        { "type": "system", "title": "Request users", "detail": "POST /jane/getCorpUsers while the page displays a loading state." },
+        { "type": "decision", "title": "Was the request successful?", "detail": "Separate successful data, successful empty, unauthorized, and technical failure outcomes." },
+        { "type": "outcome", "title": "Render the correct state", "detail": "Store authorized users in Redux or show the appropriate empty/error state with Retry when applicable." }
+      ],
+      "branches": [
+        { "label": "Users returned", "tone": "success", "detail": "Store and display only users returned for the authorized partner scope." },
+        { "label": "Empty result", "tone": "neutral", "detail": "Show No users found without describing the outcome as an error." },
+        { "label": "Technical failure", "tone": "danger", "detail": "Show a recoverable error with Retry; do not present it as an empty list." },
+        { "label": "Unauthorized", "tone": "danger", "detail": "Deny route access and do not expose user data." }
+      ],
+      "apis": [
+        {
+          "name": "getCorpUsers",
+          "method": "POST",
+          "path": "/jane/getCorpUsers",
+          "purpose": "Load users for the authenticated corporate partner.",
+          "request": { "partner_id": "corporate@example.com", "source": "urwifi" },
+          "successResponse": { "status": { "result": true }, "users": [{ "id": 123, "email": "user@example.com", "active": 1 }] },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to load users" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR01", "text": "An operator may view and manage only users in the authorized partner or tenant scope." },
+        { "id": "USR-BR11", "text": "The backend must enforce permissions and tenant boundaries independently of the browser." }
+      ],
+      "gaps": [
+        { "id": "USR-G01", "severity": "critical", "text": "Fine-grained permission enforcement is not verified for the Users route and actions." },
+        { "id": "USR-G06", "severity": "medium", "text": "Current request failures normally appear as an empty user list." }
+      ],
+      "acceptance": [
+        { "id": "USR-AC01", "text": "A successful request displays only users returned for the operator's partner scope." },
+        { "id": "USR-AC02", "text": "Pending requests show loading and disable destructive actions." },
+        { "id": "USR-AC03", "text": "A successful empty response shows No users found." },
+        { "id": "USR-AC04", "text": "A technical failure shows an error with Retry." },
+        { "id": "USR-AC05", "text": "Unauthorized operators cannot access the route or retrieve the list." }
+      ],
+      "codeReferences": ["src/containers/Users/Users.jsx", "src/app/Admin.js", "src/redux/reducers/auth.reducer.js"]
+    },
+    {
+      "id": "USR-F02",
+      "title": "Search, sort, paginate and export",
+      "shortTitle": "Search & export",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Corporate Portal Operator",
+      "trigger": "Use a table control after users have loaded.",
+      "summary": "Explore the already-loaded user list and export the current authorized result without exposing action or internal fields.",
+      "preconditions": ["The user list has completed loading.", "The operator has View Users permission.", "Export additionally requires Export Users permission."],
+      "outcome": "The table or CSV reflects the current search and sort result.",
+      "steps": [
+        { "type": "user", "title": "Choose a table operation", "detail": "Enter a search, select a sortable column, change page or page size, or request export." },
+        { "type": "system", "title": "Transform loaded rows", "detail": "Apply case-insensitive search, sorting, and pagination to the authorized in-memory list." },
+        { "type": "decision", "title": "Export requested?", "detail": "Check the independent export permission before preparing a file." },
+        { "type": "outcome", "title": "Show or export result", "detail": "Update row range and totals, or download the filtered result without Actions and internal fields." }
+      ],
+      "branches": [
+        { "label": "Search cleared", "tone": "neutral", "detail": "Restore the full loaded list and reset to page 1." },
+        { "label": "Page size changed", "tone": "neutral", "detail": "Reset to page 1 before rendering the new range." },
+        { "label": "Export denied", "tone": "danger", "detail": "Do not generate or download user data." }
+      ],
+      "apis": [],
+      "rules": [{ "id": "USR-BR01", "text": "Table operations must remain limited to users in the authorized scope." }],
+      "gaps": [
+        { "id": "USR-G07", "severity": "medium", "text": "CSV export is disabled by the exportcsv versus exportCsv prop-name mismatch." },
+        { "id": "USR-G09", "severity": "medium", "text": "The initial page size is 10, but 10 is absent from the page-size options." }
+      ],
+      "acceptance": [
+        { "id": "USR-AC06", "text": "A partial mixed-case email search returns the correct rows." },
+        { "id": "USR-AC07", "text": "Selecting a sortable column twice toggles ascending and descending order." },
+        { "id": "USR-AC08", "text": "The visible range and total match the filtered result." },
+        { "id": "USR-AC09", "text": "CSV contains the filtered users and excludes the Actions column." },
+        { "id": "USR-AC10", "text": "An operator without Export permission cannot export." }
+      ],
+      "codeReferences": ["src/containers/Users/Users.jsx", "src/components/SupportTableAdapter.js"]
+    },
+    {
+      "id": "USR-F03",
+      "title": "Create corporate user",
+      "shortTitle": "Create user",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Operator with Create Users permission",
+      "trigger": "Select + Add User.",
+      "summary": "Validate and create exactly one corporate user in the intended partner and source scope.",
+      "preconditions": ["The operator is authenticated and authorized to create users.", "The authoritative partner and source are known."],
+      "outcome": "One new user is created and appears once in the list.",
+      "steps": [
+        { "type": "user", "title": "Open Add User", "detail": "Display a blank form with approved defaults and the corporate email read-only." },
+        { "type": "user", "title": "Enter profile", "detail": "Provide first name, last name, work email, international phone number, and status." },
+        { "type": "system", "title": "Normalize and validate", "detail": "Trim inputs and validate required names, email format, phone format, and approved source scope." },
+        { "type": "decision", "title": "Is the submission valid?", "detail": "Block invalid or duplicate values with field-level guidance." },
+        { "type": "system", "title": "Create user", "detail": "Disable repeat submission and POST addCorpUser with requestType Add." },
+        { "type": "outcome", "title": "Refresh list", "detail": "Close the modal, show confirmation, and append exactly one authoritative response row." }
+      ],
+      "branches": [
+        { "label": "Validation failure", "tone": "danger", "detail": "Keep the form open and show field-level errors." },
+        { "label": "Duplicate user", "tone": "danger", "detail": "Preserve entered values and display an understandable conflict message." },
+        { "label": "API failure", "tone": "danger", "detail": "Keep data, re-enable Create, and offer retry." }
+      ],
+      "apis": [
+        {
+          "name": "addCorpUser",
+          "method": "POST",
+          "path": "/jane/addCorpUser",
+          "purpose": "Create the corporate user.",
+          "request": {
+            "requestType": "Add",
+            "first_name": "Example",
+            "last_name": "User",
+            "email": "user@example.com",
+            "contact": { "code": "65", "number": "81234567" },
+            "active": 1,
+            "partner_id": "corporate@example.com",
+            "request_source": "urwifi",
+            "isAssignCard": false
+          },
+          "successResponse": { "status": { "result": true }, "message": "User created", "user": { "id": 123, "email": "user@example.com" } },
+          "errorResponse": { "status": { "result": false }, "message": "User already exists" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR02", "text": "Email is the user ID and becomes immutable after creation." },
+        { "id": "USR-BR04", "text": "First name, last name, valid email, and valid international phone are mandatory." },
+        { "id": "USR-BR12", "text": "Repeated submission must not create duplicate users." }
+      ],
+      "gaps": [
+        { "id": "USR-G03", "severity": "high", "text": "Create is not currently protected against repeated clicks." },
+        { "id": "USR-G05", "severity": "high", "text": "Create always uses urwifi while other flows derive source differently." },
+        { "id": "USR-G10", "severity": "medium", "text": "Required fields currently use truthy checks instead of normalized validation." },
+        { "id": "USR-G13", "severity": "medium", "text": "Card lookup runs before the new user has a persisted identity." }
+      ],
+      "acceptance": [
+        { "id": "USR-AC11", "text": "Blank or whitespace-only required values block submission." },
+        { "id": "USR-AC12", "text": "Invalid email blocks submission." },
+        { "id": "USR-AC13", "text": "Invalid or incomplete phone blocks submission." },
+        { "id": "USR-AC14", "text": "A pending create cannot be submitted twice." },
+        { "id": "USR-AC15", "text": "Success closes the modal and shows exactly one new row." },
+        { "id": "USR-AC16", "text": "Duplicate-user failure preserves entered data and explains the conflict." },
+        { "id": "USR-AC17", "text": "The user is linked only to the approved partner and source." }
+      ],
+      "codeReferences": ["src/containers/Users/UserModal.js", "src/redux/reducers/auth.reducer.js"]
+    },
+    {
+      "id": "USR-F04",
+      "title": "Edit corporate user",
+      "shortTitle": "Edit user",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Operator with Edit Users permission",
+      "trigger": "Select Edit for an existing user.",
+      "summary": "Update permitted profile fields while preserving immutable identity and authoritative partner/source ownership.",
+      "preconditions": ["A user row is selected.", "The operator may edit that user.", "The current authoritative record is available."],
+      "outcome": "Saved values appear immediately in the selected row.",
+      "steps": [
+        { "type": "user", "title": "Select Edit", "detail": "Open a mode-specific edit form populated from the selected row." },
+        { "type": "system", "title": "Lock identifiers", "detail": "Email, phone, partner, and source remain read-only unless a separate migration flow exists." },
+        { "type": "user", "title": "Change permitted values", "detail": "Edit first name, last name, and approved status fields." },
+        { "type": "decision", "title": "Any valid changes?", "detail": "Enable Save only when normalized values differ and remain valid." },
+        { "type": "system", "title": "Save update", "detail": "POST addCorpUser with requestType Edit and authoritative user identifiers." },
+        { "type": "outcome", "title": "Update row", "detail": "Apply an immutable state update and close or confirm the modal according to policy." }
+      ],
+      "branches": [
+        { "label": "Close with unsaved changes", "tone": "warning", "detail": "Ask the operator to discard or continue editing." },
+        { "label": "Concurrent update", "tone": "warning", "detail": "Use version handling or an explicitly approved last-write-wins rule." },
+        { "label": "Save failure", "tone": "danger", "detail": "Preserve changes and display the backend message." }
+      ],
+      "apis": [
+        {
+          "name": "addCorpUser",
+          "method": "POST",
+          "path": "/jane/addCorpUser",
+          "purpose": "Update permitted user fields.",
+          "request": { "requestType": "Edit", "app_user_id": 123, "email": "user@example.com", "first_name": "Updated", "last_name": "User", "active": 1, "partner_id": "corporate@example.com", "request_source": "urwifi" },
+          "successResponse": { "status": { "result": true }, "message": "User updated", "user": { "id": 123, "first_name": "Updated" } },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to update user" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR02", "text": "Email is immutable after creation." },
+        { "id": "USR-BR03", "text": "Phone changes require a separate verified process." },
+        { "id": "USR-BR10", "text": "Profile changes must be audited." }
+      ],
+      "gaps": [
+        { "id": "USR-G04", "severity": "high", "text": "The reducer mutates the existing user array and may not trigger a reliable re-render." },
+        { "id": "USR-G05", "severity": "high", "text": "Edit source is inferred from the operator instead of an approved authoritative rule." },
+        { "id": "USR-G15", "severity": "low", "text": "The Edit modal subtitle currently describes creating a new user." }
+      ],
+      "acceptance": [
+        { "id": "USR-AC18", "text": "Email and phone cannot be edited through this flow." },
+        { "id": "USR-AC19", "text": "Save includes the selected user ID and approved partner/source scope." },
+        { "id": "USR-AC20", "text": "The list updates immediately after success." },
+        { "id": "USR-AC21", "text": "Failure preserves edits and displays the backend message." },
+        { "id": "USR-AC22", "text": "Closing a dirty form requires confirmation." }
+      ],
+      "codeReferences": ["src/containers/Users/UserModal.js", "src/redux/reducers/auth.reducer.js"]
+    },
+    {
+      "id": "USR-F05",
+      "title": "Suspend or reactivate user",
+      "shortTitle": "Suspend / reactivate",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Operator with User Status permission",
+      "trigger": "Select Suspend for an active user or Reactivate for a suspended user.",
+      "summary": "Change lifecycle status with confirmation, visible outcome, preserved history, and an audit record.",
+      "preconditions": ["The selected user exists.", "The operator may change status.", "The requested transition is permitted by policy."],
+      "outcome": "The status changes only after backend success and the transition is audited.",
+      "steps": [
+        { "type": "user", "title": "Choose status action", "detail": "Select Suspend or Reactivate for the user." },
+        { "type": "system", "title": "Explain impact", "detail": "Show what the transition means for sign-in, orders, devices, plans, and billing." },
+        { "type": "decision", "title": "Confirm transition?", "detail": "Cancel leaves the status unchanged and sends no request." },
+        { "type": "system", "title": "Submit status", "detail": "Send an Edit request with active 0 or 1 while preventing duplicates." },
+        { "type": "outcome", "title": "Update and audit", "detail": "Change the visible row only after success and record actor, user, old/new state, time, and reason when required." }
+      ],
+      "branches": [
+        { "label": "Canceled", "tone": "neutral", "detail": "No API call and no visual status change." },
+        { "label": "Failure", "tone": "danger", "detail": "Keep the previous status and show a recoverable error." },
+        { "label": "Policy blocks transition", "tone": "warning", "detail": "Explain why the selected transition is unavailable." }
+      ],
+      "apis": [
+        {
+          "name": "addCorpUser",
+          "method": "POST",
+          "path": "/jane/addCorpUser",
+          "purpose": "Persist the selected lifecycle status.",
+          "request": { "requestType": "Edit", "app_user_id": 123, "email": "user@example.com", "active": 0 },
+          "successResponse": { "status": { "result": true }, "message": "User suspended" },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to change user status" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR05", "text": "A user has one approved lifecycle status." },
+        { "id": "USR-BR06", "text": "Suspension is reversible and preserves history." },
+        { "id": "USR-BR10", "text": "Status changes must be audited." }
+      ],
+      "gaps": [
+        { "id": "USR-G11", "severity": "medium", "text": "Current Suspend sends immediately without confirmation or visible API result." },
+        { "id": "USR-G16", "severity": "low", "text": "The Japanese tooltip currently describes Suspend as deletion." }
+      ],
+      "acceptance": [
+        { "id": "USR-AC23", "text": "Canceling confirmation sends no request." },
+        { "id": "USR-AC24", "text": "Status changes only after backend success." },
+        { "id": "USR-AC25", "text": "Failure leaves the displayed status unchanged and shows an error." },
+        { "id": "USR-AC26", "text": "Audit data identifies actor, user, old/new status, timestamp, and reason when required." },
+        { "id": "USR-AC27", "text": "An authorized operator can reactivate when policy permits." }
+      ],
+      "codeReferences": ["src/containers/Users/Users.jsx", "src/containers/Users/UserModal.js"]
+    },
+    {
+      "id": "USR-F06",
+      "title": "Delete user",
+      "shortTitle": "Delete user",
+      "status": "decision-required",
+      "evidence": "AS-IS reviewed · business approval required",
+      "actor": "Operator with Delete Users permission",
+      "trigger": "Select Delete User from Edit mode.",
+      "summary": "Permanently delete only when policy, retention rules, dependencies, authorization, and explicit confirmation all permit it; otherwise use Suspend or Archive.",
+      "preconditions": ["Management has approved hard deletion.", "The user has no protected dependencies.", "The operator has Delete Users permission."],
+      "outcome": "The row is removed only after confirmed backend success, with an immutable audit event.",
+      "steps": [
+        { "type": "user", "title": "Request deletion", "detail": "Select Delete User for the chosen record." },
+        { "type": "system", "title": "Check policy and dependencies", "detail": "Verify retention, financial records, order history, privacy obligations, and authorization." },
+        { "type": "decision", "title": "Is deletion permitted?", "detail": "If not, explain the block and direct the operator to Suspend or Archive." },
+        { "type": "decision", "title": "Confirm irreversible action", "detail": "Require an explicit confirmation that identifies the selected user." },
+        { "type": "system", "title": "Delete and audit", "detail": "POST deleteUser and create an immutable audit event." },
+        { "type": "outcome", "title": "Remove after success", "detail": "Remove the row exactly once only after the backend confirms deletion." }
+      ],
+      "branches": [
+        { "label": "Not approved", "tone": "warning", "detail": "Hide or disable Delete and use the approved reversible action." },
+        { "label": "Dependency blocks deletion", "tone": "warning", "detail": "Keep the user and explain the applicable retention rule." },
+        { "label": "Request rejected or failed", "tone": "danger", "detail": "Keep the row and modal unchanged and display the reason." }
+      ],
+      "apis": [
+        {
+          "name": "deleteUser",
+          "method": "POST",
+          "path": "/jane/deleteUser",
+          "purpose": "Delete the selected user when policy allows it.",
+          "request": { "app_user_id": 123, "email": "user@example.com", "partner_id": "corporate@example.com" },
+          "successResponse": { "status": { "result": true }, "message": "User deleted" },
+          "errorResponse": { "status": { "result": false }, "message": "User cannot be deleted because protected records exist" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR05", "text": "Deleted or archived state follows the approved lifecycle policy." },
+        { "id": "USR-BR07", "text": "Hard deletion remains disabled unless retention and dependency checks permit it." },
+        { "id": "USR-BR10", "text": "Deletion must be audited." }
+      ],
+      "gaps": [
+        { "id": "USR-G02", "severity": "high", "text": "DELETEUSER is missing from action constants and the reducer, so the row may remain visible." },
+        { "id": "USR-G12", "severity": "medium", "text": "The current modal closes after an unsuccessful response." }
+      ],
+      "acceptance": [
+        { "id": "USR-AC28", "text": "No deletion request is sent without explicit confirmation." },
+        { "id": "USR-AC29", "text": "Successful approved deletion removes the row exactly once." },
+        { "id": "USR-AC30", "text": "Rejected deletion keeps the row and displays the reason." },
+        { "id": "USR-AC31", "text": "Protected history follows the approved retention rule." },
+        { "id": "USR-AC32", "text": "Unauthorized operators cannot see or invoke Delete." }
+      ],
+      "codeReferences": ["src/containers/Users/UserModal.js", "src/redux/actions/actiontypes.js", "src/redux/reducers/auth.reducer.js"]
+    },
+    {
+      "id": "USR-F07",
+      "title": "Assign corporate card",
+      "shortTitle": "Assign card",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Operator with Card Assignment permission",
+      "trigger": "Choose Assign corporate card while editing a user without an existing corporate card.",
+      "summary": "Associate one eligible corporate card with a user using masked information and idempotent behavior.",
+      "preconditions": ["The user has no current crpc card.", "The corporate account has an eligible card.", "The operator has Card Assignment permission."],
+      "outcome": "The user has one audited corporate-card association and only masked card information is displayed.",
+      "steps": [
+        { "type": "system", "title": "Load association state", "detail": "Determine whether the selected user already has a crpc card." },
+        { "type": "decision", "title": "Eligible corporate card available?", "detail": "Block assignment when the corporate account has no eligible card." },
+        { "type": "user", "title": "Choose assignment", "detail": "Select the checkbox after reviewing masked card information." },
+        { "type": "system", "title": "Submit with user edit", "detail": "Set isAssignCard only when no association exists and prevent duplicate requests." },
+        { "type": "outcome", "title": "Show masked association", "detail": "Refresh card data and record actor, user, masked reference, and time." }
+      ],
+      "branches": [
+        { "label": "No corporate card", "tone": "warning", "detail": "Disable assignment and explain that the corporate account needs an eligible card." },
+        { "label": "Association already exists", "tone": "neutral", "detail": "Do not offer duplicate assignment." },
+        { "label": "Partial failure", "tone": "danger", "detail": "Do not report the full edit as successful until atomic versus partial behavior is defined." }
+      ],
+      "apis": [
+        {
+          "name": "addCorpUser",
+          "method": "POST",
+          "path": "/jane/addCorpUser",
+          "purpose": "Update the user and request corporate-card assignment.",
+          "request": { "requestType": "Edit", "app_user_id": 123, "email": "user@example.com", "isAssignCard": true, "corp_card": "masked-card-reference" },
+          "successResponse": { "status": { "result": true }, "message": "Corporate card assigned" },
+          "errorResponse": { "status": { "result": false }, "message": "Corporate card assignment failed" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR08", "text": "A user may have at most one corporate card unless multiple-card support is approved." },
+        { "id": "USR-BR09", "text": "Only masked card information may be shown." },
+        { "id": "USR-BR12", "text": "Repeated submission must not create duplicate associations." }
+      ],
+      "gaps": [{ "id": "USR-G13", "severity": "medium", "text": "Card data is requested in Add mode before a persisted user identity exists." }],
+      "acceptance": [
+        { "id": "USR-AC33", "text": "Assignment is unavailable when no eligible corporate card exists." },
+        { "id": "USR-AC34", "text": "An existing association cannot be duplicated." },
+        { "id": "USR-AC35", "text": "Success displays masked card information only." },
+        { "id": "USR-AC36", "text": "The audit event identifies actor, user, masked reference, and timestamp." }
+      ],
+      "codeReferences": ["src/containers/Users/UserModal.js", "src/services/general.services.js"]
+    },
+    {
+      "id": "USR-F08",
+      "title": "Remove corporate card",
+      "shortTitle": "Remove card",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Operator with Card Assignment permission",
+      "trigger": "Select the card removal action for a user with a crpc card.",
+      "summary": "Unassign the current corporate card after confirmation while preserving the association on failure.",
+      "preconditions": ["A crpc card association exists.", "The operator has Card Assignment permission.", "The billing impact is defined."],
+      "outcome": "The card association is removed after success and the operation is audited.",
+      "steps": [
+        { "type": "system", "title": "Show current card", "detail": "Display masked last digits and never expose full card data." },
+        { "type": "user", "title": "Choose Unassign", "detail": "Use business wording that matches whether the backend unassigns or deletes a payment method." },
+        { "type": "system", "title": "Explain billing impact", "detail": "Describe what happens to future billing before confirmation." },
+        { "type": "decision", "title": "Confirm removal?", "detail": "Cancel leaves the association unchanged." },
+        { "type": "system", "title": "Submit removal", "detail": "Send cardId, user email, and app user ID to the dispatcher." },
+        { "type": "outcome", "title": "Refresh association", "detail": "After success, replace masked-card details with the assignment option." }
+      ],
+      "branches": [
+        { "label": "Canceled", "tone": "neutral", "detail": "Do not call the dispatcher or change the card display." },
+        { "label": "Failure", "tone": "danger", "detail": "Keep the current masked association and offer a recoverable error." },
+        { "label": "Semantics unresolved", "tone": "warning", "detail": "Confirm whether deleteCard removes a payment method or only its user association." }
+      ],
+      "apis": [
+        {
+          "name": "deleteCard",
+          "method": "POST",
+          "path": "Remote dispatcher",
+          "purpose": "Remove or unassign the selected corporate-card association.",
+          "request": { "requestType": "deleteCard", "cardId": "masked-card-reference", "userId": "user@example.com", "appUserId": 123 },
+          "successResponse": { "status": { "result": true }, "message": "Card association removed" },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to remove card association" }
+        }
+      ],
+      "rules": [
+        { "id": "USR-BR08", "text": "Corporate-card association follows the approved one-card policy." },
+        { "id": "USR-BR09", "text": "Only masked card information may be shown." },
+        { "id": "USR-BR10", "text": "Card removal must be audited." }
+      ],
+      "gaps": [{ "id": "USR-G14", "severity": "medium", "text": "Card-removal exceptions currently provide no visible recovery state." }],
+      "acceptance": [
+        { "id": "USR-AC37", "text": "Canceling confirmation leaves the association unchanged." },
+        { "id": "USR-AC38", "text": "Success replaces masked-card details with the assignment option." },
+        { "id": "USR-AC39", "text": "Failure preserves the card display and shows an error." }
+      ],
+      "codeReferences": ["src/containers/Users/UserModal.js", "src/services/general.services.js"]
+    },
+    {
+      "id": "USR-F09",
+      "title": "Open user in Support",
+      "shortTitle": "Open in Support",
+      "status": "draft",
+      "evidence": "AS-IS reviewed · TO-BE proposed",
+      "actor": "Operator with Support access",
+      "trigger": "Select Support for a user row that contains an email.",
+      "summary": "Carry the selected user's email into Support and initiate the correct lookup without bypassing Support authorization or tenant scope.",
+      "preconditions": ["The row contains an email.", "The operator is authorized to access Support.", "Support independently enforces tenant scope."],
+      "outcome": "Support opens and searches for the intended user within the operator's authorized scope.",
+      "steps": [
+        { "type": "user", "title": "Select Support", "detail": "Choose the Support action on the intended user row." },
+        { "type": "system", "title": "Carry navigation context", "detail": "Navigate to /admin/support with prefillUserQuery set to the selected email." },
+        { "type": "system", "title": "Prefill and search", "detail": "Support copies the email into its query and runs the Email/Mobile lookup." },
+        { "type": "system", "title": "Clear transient state", "detail": "Remove the navigation state after consuming it." },
+        { "type": "outcome", "title": "Show authorized result", "detail": "Display the selected user only if independent Support authorization and scope checks pass." }
+      ],
+      "branches": [
+        { "label": "Email missing", "tone": "warning", "detail": "Disable the Support action and explain why it is unavailable." },
+        { "label": "Support unauthorized", "tone": "danger", "detail": "Deny access; navigation context must never grant permission." },
+        { "label": "User not found", "tone": "neutral", "detail": "Show the standard Support no-result state." }
+      ],
+      "apis": [],
+      "rules": [
+        { "id": "USR-BR01", "text": "Support lookup remains restricted to authorized tenant scope." },
+        { "id": "USR-BR11", "text": "Support authorization must be enforced independently of navigation state." }
+      ],
+      "gaps": [],
+      "acceptance": [
+        { "id": "USR-AC40", "text": "Selecting Support opens the page and initiates lookup for the correct email." },
+        { "id": "USR-AC41", "text": "Missing email disables the action with an explanatory tooltip." },
+        { "id": "USR-AC42", "text": "Support independently checks authorization and partner scope." }
+      ],
+      "codeReferences": ["src/containers/Users/Users.jsx", "src/containers/Support/Support.jsx"]
+    }
+  ]
+}

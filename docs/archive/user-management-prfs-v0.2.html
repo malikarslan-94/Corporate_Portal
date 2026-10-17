@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yoowifi Corporate Portal - Product Flow Library</title>
+  <style>
+    :root { --navy: #0f2f55; --blue: #1769aa; --pale-blue: #eaf2fc; --line: #d7e1ec; --canvas: #eef3f8; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #172033; line-height: 1.45; margin: 0; font-size: 10.5pt; background: var(--canvas); }
+    h1 { color: #0f172a; font-size: 24pt; margin: 0 0 8px; }
+    h2 { color: #123b70; font-size: 16pt; margin-top: 30px; border-bottom: 2px solid #dbeafe; padding-bottom: 5px; }
+    h3 { color: #1e3a5f; font-size: 12.5pt; margin-top: 22px; }
+    h4 { color: #334155; font-size: 11pt; margin: 18px 0 6px; }
+    p { margin: 6px 0 10px; }
+    ul, ol { margin-top: 5px; }
+    li { margin: 3px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; page-break-inside: auto; }
+    th, td { border: 1px solid #cbd5e1; padding: 7px 8px; vertical-align: top; text-align: left; }
+    th { background: #eaf2fc; color: #0f2f55; font-weight: bold; }
+    tr { page-break-inside: avoid; }
+    code { font-family: Menlo, Consolas, monospace; font-size: 9.5pt; background: #f1f5f9; padding: 1px 4px; }
+    pre { font-family: Menlo, Consolas, monospace; font-size: 8.8pt; line-height: 1.4; background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 12px; white-space: pre-wrap; word-break: break-word; }
+    pre code { background: transparent; padding: 0; }
+    .cover { text-align: center; padding: 90px 30px 70px; border: 2px solid #bfdbfe; background: #f8fbff; }
+    .cover .subtitle { font-size: 15pt; color: #334155; }
+    .cover .meta { margin-top: 50px; color: #475569; }
+    .notice { background: #fff7ed; border-left: 5px solid #f97316; padding: 12px 14px; margin: 14px 0; }
+    .approved { background: #ecfdf5; border-left: 5px solid #10b981; padding: 12px 14px; margin: 14px 0; }
+    .info { background: #eff6ff; border-left: 5px solid #3b82f6; padding: 12px 14px; margin: 14px 0; }
+    .gap { background: #fef2f2; border-left: 5px solid #ef4444; padding: 12px 14px; margin: 14px 0; }
+    .small { font-size: 9pt; color: #475569; }
+    .status { display: inline-block; font-weight: bold; padding: 2px 7px; border-radius: 12px; background: #fde68a; color: #78350f; }
+    .page-break { page-break-before: always; }
+    .flow { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 14px; margin: 8px 0 14px; font-family: Menlo, Consolas, monospace; white-space: pre-wrap; }
+    .checkbox { font-family: Arial, sans-serif; }
+    .site-header { position: sticky; top: 0; z-index: 1000; color: #fff; background: rgba(15, 47, 85, 0.99); border-bottom: 1px solid rgba(255, 255, 255, 0.16); box-shadow: 0 8px 24px rgba(15, 47, 85, 0.18); }
+    .site-header__inner { width: min(1280px, 100%); margin: 0 auto; padding: 12px 24px 14px; }
+    .site-header__heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 11px; }
+    .site-header__brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .site-header__mark { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px; color: var(--navy); background: #fff; font-size: 15px; font-weight: 800; }
+    .site-header__eyebrow { margin: 0 0 1px; color: #a9cceb; font-size: 8pt; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
+    .site-header__title { margin: 0; color: #fff; font-size: 13pt; line-height: 1.2; }
+    .site-header__meta { margin: 0; flex: 0 0 auto; color: #d7e7f5; font-size: 9pt; }
+    .mobile-nav-toggle { display: none; width: 100%; align-items: center; justify-content: space-between; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 10px; padding: 9px 11px; color: #fff; background: rgba(255, 255, 255, 0.08); font: inherit; font-weight: 700; cursor: pointer; }
+    .module-nav { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+    .module-menu { position: relative; }
+    .module-trigger { appearance: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 8px; padding: 7px 10px; color: #e8f2fb; background: rgba(255, 255, 255, 0.06); font: inherit; font-size: 9.25pt; font-weight: 700; white-space: nowrap; cursor: pointer; transition: color 160ms ease, background 160ms ease, border-color 160ms ease; }
+    .module-trigger::after { content: ''; width: 6px; height: 6px; margin-top: -3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform 160ms ease; }
+    .module-trigger:hover, .module-trigger[aria-expanded="true"] { background: rgba(255, 255, 255, 0.14); }
+    .module-trigger.is-active { color: var(--navy); background: #fff; border-color: #fff; }
+    .module-trigger[aria-expanded="true"]::after { margin-top: 3px; transform: rotate(225deg); }
+    .module-trigger:focus-visible, .flow-menu__item:focus-visible, .mobile-nav-toggle:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    .flow-menu { position: absolute; top: calc(100% + 9px); left: 0; z-index: 1100; display: none; width: max-content; min-width: 245px; max-width: min(360px, calc(100vw - 32px)); max-height: min(520px, calc(100vh - 150px)); overflow-y: auto; padding: 7px; color: #172033; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 45px rgba(15, 47, 85, 0.24); }
+    .module-menu.is-open .flow-menu { display: grid; gap: 3px; }
+    .module-menu:nth-last-child(-n+2) .flow-menu { right: 0; left: auto; }
+    .flow-menu__label { margin: 2px 7px 5px; color: #64748b; font-size: 8pt; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .flow-menu__item { appearance: none; width: 100%; border: 0; border-radius: 8px; padding: 9px 10px; color: #24364b; background: transparent; font: inherit; font-size: 9.5pt; line-height: 1.35; text-align: left; cursor: pointer; }
+    .flow-menu__item:hover { color: var(--navy); background: var(--pale-blue); }
+    .flow-menu__item.is-active { color: #0f4f85; background: #dbeafe; font-weight: 800; }
+    .flow-menu__item:disabled { color: #94a3b8; background: #f8fafc; cursor: not-allowed; }
+    .flow-menu__item:disabled::before { content: 'Planned · '; font-weight: 800; }
+    .feature-panel { width: min(1120px, calc(100% - 40px)); min-height: calc(100vh - 160px); margin: 28px auto 48px; padding: 32px 38px 46px; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 55px rgba(30, 58, 95, 0.09); scroll-margin-top: 145px; }
+    .feature-panel[hidden] { display: none !important; }
+    .feature-panel > h2:first-child { margin-top: 0; }
+    @media screen and (max-width: 720px) {
+      body { margin: 0; font-size: 10pt; }
+      h1 { font-size: 20pt; }
+      h2 { font-size: 14pt; }
+      .cover { padding: 48px 16px 40px; }
+      .cover .subtitle { font-size: 13pt; }
+      .cover .meta { margin-top: 32px; }
+      .site-header { position: relative; }
+      .site-header__inner { padding: 10px 14px 12px; }
+      .site-header__heading { margin-bottom: 9px; }
+      .site-header__meta { display: none; }
+      .site-header__title { font-size: 11.5pt; }
+      .mobile-nav-toggle { display: flex; }
+      .module-nav { display: none; margin-top: 8px; padding: 6px; background: rgba(4, 26, 50, 0.48); border-radius: 12px; }
+      .module-nav.is-expanded { display: grid; grid-template-columns: 1fr; }
+      .module-trigger { width: 100%; justify-content: space-between; padding: 9px 10px; }
+      .flow-menu, .module-menu:nth-last-child(-n+2) .flow-menu { position: static; width: 100%; max-width: none; max-height: none; margin-top: 4px; box-shadow: none; }
+      .feature-panel { width: calc(100% - 20px); margin: 14px auto 30px; padding: 18px 14px 30px; border-radius: 14px; }
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      th, td { min-width: 130px; }
+      pre, .flow { overflow-x: auto; }
+    }
+    @media print {
+      body { margin: 22mm 18mm; background: #fff; }
+      .site-header { display: none; }
+      .feature-panel, .feature-panel[hidden] { display: block !important; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .cover { page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" aria-label="Product documentation navigation">
+    <div class="site-header__inner">
+      <div class="site-header__heading">
+        <div class="site-header__brand">
+          <span class="site-header__mark" aria-hidden="true">Y</span>
+          <div>
+            <p class="site-header__eyebrow">Yoowifi Corporate Portal</p>
+            <p class="site-header__title">Product flow library</p>
+          </div>
+        </div>
+        <p class="site-header__meta">User flows · PRFS-USR-001 v0.2</p>
+      </div>
+      <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="module-navigation">Browse portal modules <span aria-hidden="true">☰</span></button>
+      <nav class="module-nav" id="module-navigation" aria-label="Portal modules">
+        <div class="module-menu" data-module="dashboard">
+          <button class="module-trigger" type="button" aria-expanded="false">Dashboard</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Dashboard flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="order">
+          <button class="module-trigger" type="button" aria-expanded="false">Place Order</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Place Order flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="bulktopup">
+          <button class="module-trigger" type="button" aria-expanded="false">Bulk Topup</button>
+          <div class="flow-menu" role="menu">
+            <p class="flow-menu__label">Bulk Topup flows</p>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="bulk-topup">TOP-F01 · Bulk top-up &amp; token resolution</button>
+          </div>
+        </div>
+        <div class="module-menu is-active" data-module="users">
+          <button class="module-trigger is-active" type="button" aria-expanded="false">Users</button>
+          <div class="flow-menu" role="menu">
+            <p class="flow-menu__label">User Management flows</p>
+            <button class="flow-menu__item is-active" type="button" role="menuitem" data-flow="overview">Overview &amp; current state</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="load-users">USR-F01 · Open &amp; load users</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="search-export">USR-F02 · Search, sort, paginate &amp; export</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="create-user">USR-F03 · Create user</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="edit-user">USR-F04 · Edit user</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="user-status">USR-F05 · Suspend or reactivate</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="delete-user">USR-F06 · Delete user</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="cards">USR-F07/F08 · Assign or remove card</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="support">USR-F09 · Open user in Support</button>
+            <button class="flow-menu__item" type="button" role="menuitem" data-flow="governance">Rules, risks, tests &amp; governance</button>
+          </div>
+        </div>
+        <div class="module-menu" data-module="devices">
+          <button class="module-trigger" type="button" aria-expanded="false">Devices</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Device flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="inventory">
+          <button class="module-trigger" type="button" aria-expanded="false">Inventory</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Inventory flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="orders">
+          <button class="module-trigger" type="button" aria-expanded="false">Order History</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Order History flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="support">
+          <button class="module-trigger" type="button" aria-expanded="false">Support</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Support flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="statement">
+          <button class="module-trigger" type="button" aria-expanded="false">Transactions</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Transaction flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="corpcard">
+          <button class="module-trigger" type="button" aria-expanded="false">Corporate Card</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Corporate Card flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+        <div class="module-menu" data-module="returndevice">
+          <button class="module-trigger" type="button" aria-expanded="false">Return Device</button>
+          <div class="flow-menu" role="menu"><p class="flow-menu__label">Return Device flows</p><button class="flow-menu__item" type="button" disabled>Flows will be added next</button></div>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <div class="cover">
+    <h1>Product Requirements &amp; Flow Specification</h1>
+    <p class="subtitle">Yoowifi Corporate Portal — User Management Component with Bulk Top-up Token Addendum</p>
+    <p><strong>Document ID:</strong> PRFS-USR-001</p>
+    <p><strong>Version:</strong> 0.2 &nbsp; | &nbsp; <strong>Status:</strong> Draft for Business Review</p>
+    <div class="meta">
+      <p><strong>Prepared:</strong> 14 October 2026</p>
+      <p><strong>Implementation reviewed:</strong> Current frontend repository as of 14 October 2026</p>
+      <p><strong>Business owner:</strong> To be assigned</p>
+      <p><strong>Document owner:</strong> To be assigned</p>
+    </div>
+  </div>
+
+  <div class="notice">
+    <strong>Approval warning:</strong> This is a draft baseline. “Current/As-Is” statements describe behavior observed in the frontend source. “Required/To-Be” statements are recommendations and do not become approved requirements until the business owner records approval in Section 22. Backend behavior that is not present in this repository is marked “Requires confirmation.”
+  </div>
+
+  <h2>1. Document Control</h2>
+
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Project</td><td>Yoowifi Corporate Portal</td></tr>
+    <tr><td>Component</td><td>Corporate User Management</td></tr>
+    <tr><td>Primary screen</td><td><code>/admin/users</code></td></tr>
+    <tr><td>Document type</td><td>Product Requirements &amp; Flow Specification (PRFS)</td></tr>
+    <tr><td>Current version</td><td>0.2</td></tr>
+    <tr><td>Current status</td><td><span class="status">DRAFT — NOT APPROVED FOR IMPLEMENTATION</span></td></tr>
+    <tr><td>Source of current-state evidence</td><td>Frontend source code, routing, state management, table component, service mappings, and relevant change history</td></tr>
+    <tr><td>Backend/API verification</td><td>Not available in this repository; response semantics and authorization require confirmation</td></tr>
+  </table>
+
+  <h3>1.1 Version History</h3>
+
+  <table>
+    <tr><th>Version</th><th>Date</th><th>Author</th><th>Summary</th><th>Status</th></tr>
+    <tr><td>0.1</td><td>14 Oct 2026</td><td>Development team</td><td>Initial User Management as-is audit, proposed to-be requirements, tests, risks, and approval structure</td><td>Draft</td></tr>
+    <tr><td>0.2</td><td>14 Oct 2026</td><td>Development team</td><td>Added the Bulk Top-up API flow, documented the payload-email/token mismatch, and proposed strict token resolution rules and acceptance tests</td><td>Draft</td></tr>
+  </table>
+
+  <h3>1.2 Requirement Status Labels</h3>
+
+  <table>
+    <tr><th>Label</th><th>Meaning</th></tr>
+    <tr><td><strong>AS-IS</strong></td><td>Verified in the current frontend implementation.</td></tr>
+    <tr><td><strong>PROPOSED</strong></td><td>Recommended future behavior. Manager approval is required before implementation.</td></tr>
+    <tr><td><strong>OPEN</strong></td><td>A business or technical decision is unresolved.</td></tr>
+    <tr><td><strong>GAP</strong></td><td>Current behavior is incomplete, inconsistent, risky, or does not match the screen wording.</td></tr>
+    <tr><td><strong>APPROVED</strong></td><td>The business owner has explicitly approved the identified version and decision.</td></tr>
+  </table>
+
+  <h2>2. Purpose</h2>
+
+  <p>This document establishes a single, reviewable definition of the User Management component. It records what the portal currently does, identifies behavior that is uncertain or defective, proposes a controlled target behavior, and supplies acceptance tests that can be used by development, QA, and management.</p>
+
+  <p>The primary business goal is to allow an authorized corporate portal operator to manage end users belonging to the logged-in corporate account without affecting another partner’s data.</p>
+
+  <h2>3. Scope</h2>
+
+  <h3>3.1 Included</h3>
+
+  <ul>
+    <li>Opening and loading the Corporate Users page.</li>
+    <li>Viewing, searching, sorting, paginating, and exporting the user list.</li>
+    <li>Creating a corporate user.</li>
+    <li>Editing an existing user.</li>
+    <li>Activating or suspending a user.</li>
+    <li>Deleting a user, subject to the business decision in Section 19.</li>
+    <li>Viewing, assigning, and removing a corporate payment card association.</li>
+    <li>Opening Support with the selected user prefilled.</li>
+    <li>Validation, API feedback, authorization expectations, audit requirements, and error states related to these actions.</li>
+    <li>Cross-component addendum documenting the Bulk Top-up API sequence and bearer-token ownership rules.</li>
+  </ul>
+
+  <h3>3.2 Excluded</h3>
+
+  <ul>
+    <li>Portal login, password reset, and session management except where they control access to this component.</li>
+    <li>The internal Support screen after the selected user is handed off.</li>
+    <li>Order, device, plan, transaction, and inventory workflows, except for the Bulk Top-up API and token-resolution addendum in Appendix C.</li>
+    <li>Corporate Card screen behavior outside assignment/removal from an individual user.</li>
+    <li>Backend database schema and internal API implementation not available in this repository.</li>
+    <li>Bulk user import. No such flow exists in the reviewed component.</li>
+  </ul>
+
+  <h2>4. Actors and Responsibilities</h2>
+
+  <table>
+    <tr><th>Actor</th><th>Description</th><th>Expected responsibility</th></tr>
+    <tr><td>Corporate Portal Operator</td><td>An authenticated account using the corporate portal.</td><td>View and manage only users belonging to the operator’s permitted corporate/partner account.</td></tr>
+    <tr><td>Business Owner / Manager</td><td>The person responsible for approving product behavior.</td><td>Approve scope, destructive-action policy, authorization matrix, validations, and changes to approved flows.</td></tr>
+    <tr><td>Development Team</td><td>Frontend and backend implementers.</td><td>Perform impact analysis, implement only approved behavior, link code changes to flow/requirement IDs, and document deviations.</td></tr>
+    <tr><td>QA</td><td>Person or team validating behavior.</td><td>Execute acceptance scenarios and record evidence against requirement IDs.</td></tr>
+    <tr><td>End User</td><td>The corporate customer account being managed.</td><td>No direct action in this admin component.</td></tr>
+  </table>
+
+  <div class="gap">
+    <strong>Current access-control observation:</strong> the frontend protects the admin area only by login state. The active sidebar filters some items by portal source, but it does not enforce the permissions defined in <code>access.rights.js</code>. The Users menu is hidden for the <code>garuda</code> source, while a logged-in user can still navigate directly to <code>/admin/users</code> at the frontend level. Backend authorization may provide additional protection, but that cannot be verified here.
+  </div>
+
+  <h2>5. Component Inventory</h2>
+
+  <table>
+    <tr><th>ID</th><th>Component</th><th>Purpose</th><th>Implementation reference</th></tr>
+    <tr><td>USR-C01</td><td>Users page</td><td>Loads and displays corporate users and row actions.</td><td><code>src/containers/Users/Users.jsx</code></td></tr>
+    <tr><td>USR-C02</td><td>User modal</td><td>Adds, edits, deletes users and manages corporate-card association.</td><td><code>src/containers/Users/UserModal.js</code></td></tr>
+    <tr><td>USR-C03</td><td>Reusable table</td><td>Search, sorting, pagination, loading, empty state, and CSV export.</td><td><code>src/components/SupportTableAdapter.js</code></td></tr>
+    <tr><td>USR-C04</td><td>Action buttons</td><td>Support, edit, and suspend row actions.</td><td><code>src/components/ActionButton.jsx</code></td></tr>
+    <tr><td>USR-C05</td><td>Confirmation dialog</td><td>Yes/No confirmation for delete operations.</td><td><code>src/components/Dialog.js</code></td></tr>
+    <tr><td>USR-C06</td><td>Redux authentication state</td><td>Stores logged-in corporate account and loaded user list.</td><td><code>src/redux/reducers/auth.reducer.js</code></td></tr>
+    <tr><td>USR-C07</td><td>Service layer</td><td>Posts user requests and payment-card dispatcher requests.</td><td><code>src/services/general.services.js</code>, <code>src/services/object.js</code></td></tr>
+  </table>
+
+  <h2>6. Current Screen Definition (AS-IS)</h2>
+
+  <h3>6.1 Entry and page header</h3>
+
+  <ul>
+    <li>Sidebar label: <strong>Users</strong>.</li>
+    <li>Route: <code>/admin/users</code>.</li>
+    <li>Breadcrumb heading: <strong>Corporate Users</strong>.</li>
+    <li>Hero label/title: <strong>User Management / Corporate Users</strong>.</li>
+    <li>Hero description claims the screen manages accounts, access permissions, and assigned devices. The reviewed screen does not directly edit permissions or assigned devices.</li>
+  </ul>
+
+  <h3>6.2 User table</h3>
+
+  <table>
+    <tr><th>Column</th><th>Source field</th><th>Behavior</th></tr>
+    <tr><td>Actions</td><td>N/A</td><td>Support, Edit, and Suspend icon buttons. Not sortable.</td></tr>
+    <tr><td>First Name</td><td><code>first_name</code></td><td>Searchable and sortable client-side.</td></tr>
+    <tr><td>Last Name</td><td><code>last_name</code></td><td>Searchable and sortable client-side.</td></tr>
+    <tr><td>Email</td><td><code>email</code></td><td>Displayed in bold; searchable and sortable.</td></tr>
+    <tr><td>Promo Code</td><td><code>promo_code</code></td><td>Searchable and sortable.</td></tr>
+    <tr><td>Contact</td><td><code>phone_number</code></td><td>Searchable and sortable.</td></tr>
+    <tr><td>Source</td><td><code>request_source</code></td><td>Searchable and sortable.</td></tr>
+    <tr><td>Status</td><td><code>active</code></td><td><code>0</code> displays “InActive”; <code>1</code> displays “Active”.</td></tr>
+    <tr><td>Internal ID</td><td><code>id</code></td><td>Hidden from the table and default export.</td></tr>
+  </table>
+
+  <h3>6.3 Table controls and states</h3>
+
+  <ul>
+    <li>The list shows a loading indicator until the initial request completes.</li>
+    <li>Search is performed on the already-loaded rows and visible data columns.</li>
+    <li>Column headers sort ascending and descending except Actions.</li>
+    <li>Pagination is client-side.</li>
+    <li>The internal initial page size is 10, while the page-size menu offers 25, 50, 100, 200, 400, and 500. This is an inconsistency.</li>
+    <li>Empty state text: <strong>No users found</strong>.</li>
+    <li>An <strong>+ Add User</strong> button opens the add modal.</li>
+    <li>CSV export is intended, but the Users page passes <code>exportcsv</code> while the table expects <code>exportCsv</code>. Therefore the export button is not enabled by the current code.</li>
+  </ul>
+
+  <h2>7. User Data Dictionary</h2>
+
+  <table>
+    <tr><th>Field</th><th>User-facing label</th><th>Add mode</th><th>Edit mode</th><th>Current default / source</th><th>Current validation</th></tr>
+    <tr><td><code>app_user_id</code></td><td>Not displayed</td><td>Generated/backend; initialized to 0</td><td>Read-only, from row <code>id</code></td><td>0 or existing ID</td><td>No client validation</td></tr>
+    <tr><td><code>first_name</code></td><td>First name</td><td>Editable</td><td>Editable</td><td>Blank / existing value</td><td>Required by truthy check only</td></tr>
+    <tr><td><code>last_name</code></td><td>Last name</td><td>Editable</td><td>Editable</td><td>Blank / existing value</td><td>Required by truthy check only</td></tr>
+    <tr><td><code>email</code></td><td>Work Email / User ID</td><td>Editable</td><td>Disabled</td><td>Blank / existing value</td><td>Required by truthy check; input is type email but is not submitted through an HTML form</td></tr>
+    <tr><td><code>corporate_email</code></td><td>Corporate Email</td><td>Disabled</td><td>Disabled</td><td>Logged-in account <code>user_id</code></td><td>No client validation</td></tr>
+    <tr><td><code>contact.code</code></td><td>Phone country code</td><td>Editable through phone widget</td><td>Disabled</td><td>65 or parsed existing code</td><td>Must result in a non-empty phone number in Add mode</td></tr>
+    <tr><td><code>contact.number</code></td><td>Phone number</td><td>Editable</td><td>Disabled</td><td>Blank or parsed existing number</td><td>Non-empty only; no explicit length/format rule</td></tr>
+    <tr><td><code>active</code></td><td>Status</td><td>Editable</td><td>Editable</td><td><code>true</code> for Add; existing value for Edit</td><td>Options: 1 Active, 0 Suspend</td></tr>
+    <tr><td><code>department</code></td><td>Not currently displayed</td><td>Hidden</td><td>Hidden</td><td>Blank / existing value</td><td>None</td></tr>
+    <tr><td><code>promo_code</code></td><td>Not currently editable</td><td>Hidden</td><td>Hidden</td><td>Blank / existing value</td><td>None</td></tr>
+    <tr><td><code>dob</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>1990-01-01 / existing value</td><td>None</td></tr>
+    <tr><td><code>gender</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>Blank / existing value</td><td>None</td></tr>
+    <tr><td><code>country</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>SG / existing origin country</td><td>None</td></tr>
+    <tr><td><code>origin_country</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>SG / existing value</td><td>None</td></tr>
+    <tr><td><code>language</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>en / existing value</td><td>None</td></tr>
+    <tr><td><code>currency</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>SGD / existing value</td><td>None</td></tr>
+    <tr><td><code>user_type</code></td><td>Not displayed</td><td>Hidden</td><td>Hidden</td><td>CNS / existing value</td><td>None</td></tr>
+    <tr><td><code>request_source</code></td><td>Source in list only</td><td>Forced to <code>urwifi</code></td><td>Set to logged-in portal source</td><td>Mode-dependent</td><td>No client validation</td></tr>
+    <tr><td><code>partner_id</code></td><td>Not displayed</td><td>Logged-in account ID</td><td>Logged-in account ID</td><td>Logged-in <code>user_id</code></td><td>No client validation</td></tr>
+    <tr><td><code>corp_card</code></td><td>Card association section</td><td>Set to null</td><td>Logged-in corporate account’s card reference</td><td>Mode-dependent</td><td>Corporate card must exist before assignment</td></tr>
+  </table>
+
+  <div class="notice">
+    <strong>Data decision required:</strong> the current component mixes booleans, numbers, and strings for <code>active</code>. The approved contract should normalize it to one type, preferably integer <code>1</code> or <code>0</code>, or a named status enum.
+  </div>
+
+  <h2>8. API and State Contract (AS-IS)</h2>
+
+  <table>
+    <tr><th>Operation</th><th>Method / endpoint</th><th>Important request data</th><th>Success handling</th><th>Failure handling</th></tr>
+    <tr><td>Load corporate users</td><td>POST <code>/jane/getCorpUsers</code></td><td><code>partner_id</code>, <code>source</code></td><td>Stores <code>res.users</code> in Redux</td><td>Stops loading; no visible error or retry</td></tr>
+    <tr><td>Create user</td><td>POST <code>/jane/addCorpUser</code></td><td><code>requestType: Add</code> plus profile and <code>isAssignCard</code></td><td>Adds <code>res.user</code> to Redux and displays API message</td><td>Displays API message; exception is passed to alert</td></tr>
+    <tr><td>Edit user</td><td>POST <code>/jane/addCorpUser</code></td><td><code>requestType: Edit</code> plus profile and <code>isAssignCard</code></td><td>Mutates matching Redux user and refreshes card data</td><td>Displays API message; exception is passed to alert</td></tr>
+    <tr><td>Suspend user</td><td>POST <code>/jane/addCorpUser</code></td><td><code>requestType: Edit</code>, existing values, <code>active: 0</code></td><td>Updates the local row and Redux object</td><td>No user-visible error</td></tr>
+    <tr><td>Delete user</td><td>POST <code>/jane/deleteUser</code></td><td>Entire current profile</td><td>Displays success and dispatches a delete action</td><td>Displays generic failure for an unsuccessful response; exception has no visible feedback</td></tr>
+    <tr><td>Get user cards</td><td>POST remote dispatcher, request type <code>getUserCardsEnc</code></td><td><code>userId</code>, <code>appUserId</code>, <code>source</code></td><td>Decrypts response and selects the first card where <code>pgw == crpc</code></td><td>Logs only; no visible feedback</td></tr>
+    <tr><td>Remove card</td><td>POST remote dispatcher, request type <code>deleteCard</code></td><td><code>cardId</code>, <code>userId</code>, <code>appUserId</code></td><td>Displays message and refreshes cards</td><td>Displays API message for an unsuccessful response; exception logs only</td></tr>
+  </table>
+
+  <p class="small">Authentication headers are selected by the common service layer. Exact backend validation, tenant filtering, deletion semantics, audit logging, and authorization are not verifiable from the frontend repository.</p>
+
+  <h2 class="page-break">9. Flow USR-F01 — Open and Load Corporate Users</h2>
+
+  <table>
+    <tr><th>Attribute</th><th>Definition</th></tr>
+    <tr><td>Status</td><td>AS-IS documented; TO-BE improvements proposed</td></tr>
+    <tr><td>Primary actor</td><td>Authenticated Corporate Portal Operator</td></tr>
+    <tr><td>Trigger</td><td>Operator selects Users or navigates to <code>/admin/users</code>.</td></tr>
+    <tr><td>Preconditions</td><td>Redux login state contains <code>Islogin = true</code>; logged-in account has <code>user_id</code> and normally a <code>source</code>.</td></tr>
+    <tr><td>Postcondition</td><td>The current partner’s users are shown, or an empty/error state is shown.</td></tr>
+  </table>
+
+  <h3>9.1 Current main flow</h3>
+  <ol>
+    <li>The route renders the Corporate Users page.</li>
+    <li>The page calls <code>getCorpUsers</code> using the logged-in <code>user_id</code> as <code>partner_id</code> and the logged-in source.</li>
+    <li>A loading indicator remains visible until the request resolves.</li>
+    <li>If <code>status.result</code> is true, the response user array is stored in Redux and shown.</li>
+    <li>If the response is unsuccessful or the request throws, loading ends and the table normally shows “No users found.”</li>
+  </ol>
+
+  <h3>9.2 Proposed required behavior</h3>
+  <ol>
+    <li>The system shall verify that the operator has View Users permission before requesting or displaying user data.</li>
+    <li>The backend shall enforce partner/tenant scope independently of frontend controls.</li>
+    <li>Loading, empty, unauthorized, and technical-error states shall be visibly different.</li>
+    <li>A technical-error state shall include a Retry action.</li>
+    <li>The page shall never display cached users from a different signed-in corporate account.</li>
+  </ol>
+
+  <h3>9.3 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC01:</strong> Given an authorized operator and a successful response, when the page opens, then only users returned for that operator’s partner scope are displayed.</li>
+    <li><strong>USR-AC02:</strong> Given the request is pending, when the page is visible, then a loading state is shown and destructive actions are unavailable.</li>
+    <li><strong>USR-AC03:</strong> Given a successful empty response, then the page displays “No users found” and does not describe the result as a system error.</li>
+    <li><strong>USR-AC04:</strong> Given a network or server failure, then the page displays an error with Retry and does not incorrectly claim there are no users.</li>
+    <li><strong>USR-AC05:</strong> Given an unauthorized operator, then navigation and direct route access are denied and no user-list request succeeds.</li>
+  </ul>
+
+  <h2>10. Flow USR-F02 — Search, Sort, Paginate, and Export</h2>
+
+  <h3>10.1 Current behavior</h3>
+  <ul>
+    <li>Search matches case-insensitive text across visible user data fields in the already-loaded list.</li>
+    <li>Sorting is client-side and toggles ascending/descending.</li>
+    <li>Pagination is client-side.</li>
+    <li>CSV export support exists in the table, but is currently not activated on this page because of a prop-name mismatch.</li>
+  </ul>
+
+  <h3>10.2 Proposed required behavior</h3>
+  <ul>
+    <li>Search shall match First Name, Last Name, Email, Contact, Promo Code, Source, and Status.</li>
+    <li>Clearing search shall restore the full loaded list and reset to page 1.</li>
+    <li>Changing page size shall reset to page 1.</li>
+    <li>CSV export shall exclude the Actions column and internal implementation fields unless specifically approved.</li>
+    <li>CSV export shall respect the current search and sorting result.</li>
+    <li>Export permission shall be independently configurable if user data is considered sensitive.</li>
+  </ul>
+
+  <h3>10.3 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC06:</strong> Searching by a partial email returns matching rows regardless of letter case.</li>
+    <li><strong>USR-AC07:</strong> Sorting a column twice changes from ascending to descending.</li>
+    <li><strong>USR-AC08:</strong> The row range and total count match the current filtered result.</li>
+    <li><strong>USR-AC09:</strong> Export produces one row per filtered user and no Actions column.</li>
+    <li><strong>USR-AC10:</strong> A user without Export permission cannot export user data.</li>
+  </ul>
+
+  <h2>11. Flow USR-F03 — Create User</h2>
+
+  <table>
+    <tr><th>Attribute</th><th>Definition</th></tr>
+    <tr><td>Trigger</td><td>Operator selects <strong>+ Add User</strong>.</td></tr>
+    <tr><td>Preconditions</td><td>Operator is authenticated and is permitted to create users.</td></tr>
+    <tr><td>Required visible inputs today</td><td>First name, Last name, Work Email/User ID, Phone number, Status.</td></tr>
+    <tr><td>Read-only visible input</td><td>Corporate Email, populated from logged-in account ID.</td></tr>
+    <tr><td>Postcondition</td><td>A new user is created for the intended partner and appears once in the list.</td></tr>
+  </table>
+
+  <h3>11.1 Current main flow</h3>
+  <ol>
+    <li>The add modal opens with blank names/email, country calling code 65, Active status, Singapore defaults, English language, SGD currency, user type CNS, source <code>urwifi</code>, and no corporate card.</li>
+    <li>The operator enters first name, last name, email, and phone.</li>
+    <li>The operator may change status.</li>
+    <li>Selecting Create user checks only that first name, last name, email, and phone number are non-empty.</li>
+    <li>The component posts the profile to <code>addCorpUser</code> with <code>requestType: Add</code>.</li>
+    <li>On success, <code>res.user</code> is appended to the current Redux user list and the API message is shown.</li>
+    <li>The modal remains open after success.</li>
+  </ol>
+
+  <h3>11.2 Current exceptions and gaps</h3>
+  <ul>
+    <li>Email format is not reliably enforced because the button invokes JavaScript outside a form submit flow.</li>
+    <li>Whitespace-only values can pass the truthy checks.</li>
+    <li>Phone length and validity are not explicitly checked.</li>
+    <li>The <code>isCreatingUser</code> state is never set, so the Create button is not protected against repeated clicks while the API call is pending.</li>
+    <li>The request source is always <code>urwifi</code>, even when the logged-in portal source differs. This requires business confirmation.</li>
+    <li>The modal fetches card data on mount even though a new user does not yet have an email or app user ID.</li>
+  </ul>
+
+  <h3>11.3 Proposed required behavior</h3>
+  <ol>
+    <li>Trim all text inputs before validation and submission.</li>
+    <li>Require valid first name, last name, email, and international phone number.</li>
+    <li>Reject duplicate email/user ID within the applicable source according to the backend uniqueness rule.</li>
+    <li>Disable the Create button and show progress while the request is pending.</li>
+    <li>Create exactly one user even if the operator double-clicks or the network retries.</li>
+    <li>On success, close the modal, display confirmation, and show the created row without a full-page reload.</li>
+    <li>On failure, keep entered values, show a clear error, and allow retry.</li>
+    <li>Do not request payment-card data before the user exists.</li>
+  </ol>
+
+  <h3>11.4 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC11:</strong> Blank or whitespace-only required fields block submission and show field-level guidance.</li>
+    <li><strong>USR-AC12:</strong> An invalid email blocks submission.</li>
+    <li><strong>USR-AC13:</strong> An invalid/incomplete phone number blocks submission.</li>
+    <li><strong>USR-AC14:</strong> While creation is pending, a second request cannot be submitted.</li>
+    <li><strong>USR-AC15:</strong> A successful response closes the modal and displays exactly one new row.</li>
+    <li><strong>USR-AC16:</strong> A duplicate-user response displays an understandable message and preserves entered data.</li>
+    <li><strong>USR-AC17:</strong> The created user is linked only to the approved partner/source scope.</li>
+  </ul>
+
+  <h2>12. Flow USR-F04 — Edit User</h2>
+
+  <h3>12.1 Current main flow</h3>
+  <ol>
+    <li>The operator selects Edit for a row.</li>
+    <li>The modal loads the row’s values. First name, last name, and status are editable.</li>
+    <li>Email/User ID, Corporate Email, and phone are disabled.</li>
+    <li>Hidden profile values are included in the save payload.</li>
+    <li>The operator selects Save.</li>
+    <li>The component posts to <code>addCorpUser</code> with <code>requestType: Edit</code>.</li>
+    <li>On success, the matching Redux item is mutated using email and app user ID, and card information is refreshed.</li>
+  </ol>
+
+  <h3>12.2 Current exceptions and gaps</h3>
+  <ul>
+    <li>The modal subtitle always says “Create a new user” even in Edit mode.</li>
+    <li>The Redux reducer mutates the existing array/object and returns the same state object, so the user table may not re-render reliably after an edit.</li>
+    <li>Edit uses the logged-in account’s source rather than the selected row’s <code>request_source</code>. This may be correct for single-source tenants but is unsafe without confirmation.</li>
+    <li>There is no dirty-state warning if the modal is closed after changes.</li>
+    <li>Success does not close the modal.</li>
+  </ul>
+
+  <h3>12.3 Proposed required behavior</h3>
+  <ol>
+    <li>The modal shall accurately identify Edit mode.</li>
+    <li>Immutable identifiers shall remain read-only unless a separate, approved migration flow exists.</li>
+    <li>The system shall submit only the selected user’s authoritative partner/source identifiers, not inferred defaults that can move or overwrite a cross-source user.</li>
+    <li>The Save action shall be disabled until a value changes and while saving.</li>
+    <li>Closing with unsaved changes shall request confirmation.</li>
+    <li>On success, the table shall immediately reflect the saved values.</li>
+    <li>Concurrent modification shall be handled by a version/update timestamp or a clearly documented last-write-wins decision.</li>
+  </ol>
+
+  <h3>12.4 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC18:</strong> Email and phone cannot be edited through this flow.</li>
+    <li><strong>USR-AC19:</strong> Save sends the selected user’s ID and approved source/partner scope.</li>
+    <li><strong>USR-AC20:</strong> The list updates immediately after a successful save.</li>
+    <li><strong>USR-AC21:</strong> A failed save retains the operator’s changes and displays the backend message.</li>
+    <li><strong>USR-AC22:</strong> Closing a dirty modal requires confirmation.</li>
+  </ul>
+
+  <h2>13. Flow USR-F05 — Suspend or Reactivate User</h2>
+
+  <h3>13.1 Current behavior</h3>
+  <ul>
+    <li>A Suspend icon is available for an active user.</li>
+    <li>Selecting it immediately sends an Edit request with <code>active: 0</code>; there is no confirmation.</li>
+    <li>The icon shows a loader for that row while pending.</li>
+    <li>On success, the row is updated locally and the action becomes disabled.</li>
+    <li>On failure, no visible success/error notification is shown.</li>
+    <li>A suspended user can be reactivated by opening Edit and choosing Active.</li>
+  </ul>
+
+  <h3>13.2 Proposed required behavior</h3>
+  <ol>
+    <li>Suspend shall require confirmation that states the expected effect on login, orders, devices, plans, and billing.</li>
+    <li>The system shall prevent repeated submissions while pending.</li>
+    <li>Success and failure shall be visibly communicated.</li>
+    <li>Suspension shall preserve the user record and history.</li>
+    <li>Reactivation shall be an explicit permitted action with the same audit requirements.</li>
+    <li>The business owner shall confirm whether suspension immediately blocks user authentication and new purchases.</li>
+  </ol>
+
+  <h3>13.3 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC23:</strong> Canceling the confirmation makes no request and changes no status.</li>
+    <li><strong>USR-AC24:</strong> Confirming suspension changes the status to Suspended only after backend success.</li>
+    <li><strong>USR-AC25:</strong> A failed suspension leaves the displayed status unchanged and shows an error.</li>
+    <li><strong>USR-AC26:</strong> The audit record contains actor, user, old status, new status, timestamp, and reason if required.</li>
+    <li><strong>USR-AC27:</strong> An authorized operator can reactivate a suspended user when the approved policy permits it.</li>
+  </ul>
+
+  <h2>14. Flow USR-F06 — Delete User</h2>
+
+  <div class="notice">
+    <strong>Approval required:</strong> management must decide whether permanent deletion is permitted. Until the data-retention, financial-record, order-history, and privacy implications are confirmed, Suspend should be the default reversible action.
+  </div>
+
+  <h3>14.1 Current main flow</h3>
+  <ol>
+    <li>Delete User is available in Edit mode.</li>
+    <li>The operator is shown a Yes/No confirmation.</li>
+    <li>Yes sends the profile to <code>/jane/deleteUser</code>.</li>
+    <li>A successful response shows “User has been deleted successfully.”</li>
+    <li>The component attempts to dispatch a delete action and closes the modal after three seconds.</li>
+  </ol>
+
+  <h3>14.2 Current critical gap</h3>
+  <p>The dispatched <code>DELETEUSER</code> action is not defined in <code>authActions</code> and there is no delete case in the authentication reducer. The frontend list therefore may continue showing the deleted user until the page reloads. If the API rejects deletion, the modal still closes after the delay. If the request throws, the error is logged but processing state and feedback are not reliably reset.</p>
+
+  <h3>14.3 Proposed required behavior</h3>
+  <ol>
+    <li>If hard deletion is prohibited, remove this action and use Suspend/Archive only.</li>
+    <li>If deletion is approved, the confirmation must state that the action is irreversible and list blocked conditions.</li>
+    <li>The backend shall refuse deletion when retention rules or dependent records require preservation.</li>
+    <li>The UI shall remove the row only after confirmed backend success.</li>
+    <li>A rejected or failed deletion shall keep the user and modal state unchanged and show the reason.</li>
+    <li>The operation shall create an immutable audit event.</li>
+  </ol>
+
+  <h3>14.4 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC28:</strong> No delete request is sent without explicit confirmation.</li>
+    <li><strong>USR-AC29:</strong> A successful approved deletion removes the row exactly once.</li>
+    <li><strong>USR-AC30:</strong> A rejected deletion keeps the row visible and shows the reason.</li>
+    <li><strong>USR-AC31:</strong> Users with protected financial/order history follow the approved retention rule.</li>
+    <li><strong>USR-AC32:</strong> Unauthorized operators cannot see or invoke Delete.</li>
+  </ul>
+
+  <h2>15. Flow USR-F07 — Assign Corporate Card</h2>
+
+  <h3>15.1 Current behavior</h3>
+  <ol>
+    <li>This option is shown only in Edit mode when the selected user does not already have a card with payment gateway <code>crpc</code>.</li>
+    <li>The operator checks “Assign corporate card to user.”</li>
+    <li>If the logged-in corporate account has no <code>corp_card</code>, Save is blocked with “Corporate card does not exists.”</li>
+    <li>On Save, <code>isAssignCard</code> is true only when no current card ID was found and the checkbox is selected.</li>
+    <li>The user edit and card assignment are submitted through the same <code>addCorpUser</code> request.</li>
+  </ol>
+
+  <h3>15.2 Proposed required behavior</h3>
+  <ul>
+    <li>The UI shall clearly identify the corporate card being assigned using masked information only.</li>
+    <li>Assignment shall require Card Assignment permission.</li>
+    <li>The operation shall be idempotent and prevent multiple corporate-card associations unless multiple cards are explicitly supported.</li>
+    <li>Failure to assign the card must not falsely report the entire user edit as successful. Atomic versus partial behavior must be defined.</li>
+    <li>Full card numbers, tokens, or sensitive authentication data shall never be displayed or logged.</li>
+  </ul>
+
+  <h3>15.3 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC33:</strong> Assignment is unavailable when the corporate account has no eligible card.</li>
+    <li><strong>USR-AC34:</strong> A user with an existing corporate card cannot receive a duplicate assignment.</li>
+    <li><strong>USR-AC35:</strong> Successful assignment displays only masked card information.</li>
+    <li><strong>USR-AC36:</strong> Assignment creates an audit event identifying actor, user, masked card reference, and timestamp.</li>
+  </ul>
+
+  <h2>16. Flow USR-F08 — Remove Corporate Card</h2>
+
+  <h3>16.1 Current behavior</h3>
+  <ol>
+    <li>If a <code>crpc</code> card exists, the modal displays masked last digits and a Delete button.</li>
+    <li>Selecting Delete shows a Yes/No confirmation titled Delete Card.</li>
+    <li>Yes sends <code>cardId</code>, user email, and app user ID to the remote dispatcher.</li>
+    <li>On success, a message is shown and card data is refreshed.</li>
+  </ol>
+
+  <h3>16.2 Proposed required behavior</h3>
+  <ul>
+    <li>Business wording should be <strong>Unassign corporate card</strong> unless the backend actually deletes a stored payment method.</li>
+    <li>The confirmation shall explain whether future billing fails, changes to another method, or remains on corporate billing.</li>
+    <li>Removal shall require Card Assignment permission and an audit event.</li>
+    <li>Failure shall leave the displayed association unchanged and show a recoverable error.</li>
+  </ul>
+
+  <h3>16.3 Acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC37:</strong> Canceling confirmation leaves the association unchanged.</li>
+    <li><strong>USR-AC38:</strong> Successful removal replaces the masked-card display with the assignment option.</li>
+    <li><strong>USR-AC39:</strong> A failed removal preserves the card display and shows an error.</li>
+  </ul>
+
+  <h2>17. Flow USR-F09 — Open User in Support</h2>
+
+  <h3>17.1 Current behavior</h3>
+  <ol>
+    <li>The Support action is enabled only when the row has an email.</li>
+    <li>Selecting it navigates to <code>/admin/support</code> with <code>prefillUserQuery</code> containing the email.</li>
+    <li>The Support page copies the email into its query, runs an Email/Mobile user search, and clears the navigation state.</li>
+  </ol>
+
+  <h3>17.2 Proposed required behavior and acceptance criteria</h3>
+  <ul>
+    <li><strong>USR-AC40:</strong> Selecting Support for a user with an email opens Support and initiates the correct user lookup.</li>
+    <li><strong>USR-AC41:</strong> The Support action is disabled with an explanatory tooltip when email is absent.</li>
+    <li><strong>USR-AC42:</strong> Support authorization and partner scope are checked independently; navigation context must not grant access.</li>
+  </ul>
+
+  <h2>18. Proposed Business Rules</h2>
+
+  <p>Every rule below is <strong>PROPOSED</strong> until approved.</p>
+
+  <table>
+    <tr><th>Rule ID</th><th>Rule</th><th>Approval</th></tr>
+    <tr><td>USR-BR01</td><td>A corporate operator may view and manage only users within the operator’s authorized partner/tenant scope.</td><td>Pending</td></tr>
+    <tr><td>USR-BR02</td><td>Email is the user ID and is immutable after creation.</td><td>Pending</td></tr>
+    <tr><td>USR-BR03</td><td>Phone number is immutable in this screen; a separate verified change process is required if phone changes are supported.</td><td>Pending</td></tr>
+    <tr><td>USR-BR04</td><td>First name, last name, valid email, and valid international phone are mandatory for creation.</td><td>Pending</td></tr>
+    <tr><td>USR-BR05</td><td>A user has one lifecycle status: Active, Suspended, or Deleted/Archived according to the approved deletion policy.</td><td>Pending</td></tr>
+    <tr><td>USR-BR06</td><td>Suspension is reversible and preserves user history.</td><td>Pending</td></tr>
+    <tr><td>USR-BR07</td><td>Hard deletion is disabled unless legal/data-retention and dependency checks permit it.</td><td>Pending</td></tr>
+    <tr><td>USR-BR08</td><td>A user may have at most one assigned corporate card unless multiple-card support is separately approved.</td><td>Pending</td></tr>
+    <tr><td>USR-BR09</td><td>Only masked card information may be shown.</td><td>Pending</td></tr>
+    <tr><td>USR-BR10</td><td>Create, edit, suspend/reactivate, delete, assign card, and remove card actions are audited.</td><td>Pending</td></tr>
+    <tr><td>USR-BR11</td><td>The backend, not only the browser, enforces permissions and tenant boundaries.</td><td>Pending</td></tr>
+    <tr><td>USR-BR12</td><td>Repeated submission of the same pending action must not create duplicate users or duplicate card assignments.</td><td>Pending</td></tr>
+  </table>
+
+  <h2>19. Approval Decisions Required</h2>
+
+  <table>
+    <tr><th>Decision ID</th><th>Question</th><th>Options</th><th>Recommended</th><th>Decision / approver / date</th></tr>
+    <tr><td>USR-D01</td><td>Should permanent user deletion be available?</td><td>A. Suspend only; B. Archive; C. Hard delete with conditions</td><td>A or B until retention rules are confirmed</td><td>Pending</td></tr>
+    <tr><td>USR-D02</td><td>Who may view, create, edit, suspend, delete, export, and manage cards?</td><td>Define permission matrix by portal role/group</td><td>Separate permissions per action</td><td>Pending</td></tr>
+    <tr><td>USR-D03</td><td>What source is assigned to a new user?</td><td>Always urwifi; logged-in source; selected source; backend-derived</td><td>Backend-derived from authenticated tenant unless multi-source creation is required</td><td>Pending</td></tr>
+    <tr><td>USR-D04</td><td>During Edit, should source come from the selected row or logged-in account?</td><td>Row; operator; backend lookup</td><td>Backend authoritative record / row identity</td><td>Pending</td></tr>
+    <tr><td>USR-D05</td><td>Should Create/Edit modal close after success?</td><td>Close; remain open</td><td>Close and show page-level success</td><td>Pending</td></tr>
+    <tr><td>USR-D06</td><td>May a suspended user place orders, use active services, or sign in?</td><td>Define effect per capability</td><td>Explicitly document backend enforcement</td><td>Pending</td></tr>
+    <tr><td>USR-D07</td><td>Is corporate-card assignment part of user creation?</td><td>Add only; Edit only; both; separate flow</td><td>Separate explicit step or both modes with clear confirmation</td><td>Pending</td></tr>
+    <tr><td>USR-D08</td><td>Does “Delete Card” delete a payment method or only unassign it?</td><td>Delete; unassign</td><td>Use exact backend semantics in UI wording</td><td>Pending</td></tr>
+    <tr><td>USR-D09</td><td>Is promo code intentionally read-only?</td><td>Display only; editable; remove from table</td><td>Business owner to decide</td><td>Pending</td></tr>
+    <tr><td>USR-D10</td><td>Which languages must the full User component support?</td><td>English only; portal-configured languages</td><td>Match supported portal languages consistently</td><td>Pending</td></tr>
+  </table>
+
+  <h2>20. Known Implementation Gaps and Risks</h2>
+
+  <table>
+    <tr><th>Gap ID</th><th>Severity</th><th>Observed issue</th><th>Business impact</th><th>Proposed resolution</th></tr>
+    <tr><td>USR-G01</td><td>Critical</td><td>No verified fine-grained frontend permission enforcement for the Users route/actions.</td><td>An authenticated account may see actions it should not use; backend protection is unknown.</td><td>Approve permission matrix and enforce on frontend and backend.</td></tr>
+    <tr><td>USR-G02</td><td>High</td><td>Delete action is missing from action constants and reducer.</td><td>Deleted row may remain visible; operator may repeat the action.</td><td>Add tested immutable delete handling or remove hard delete.</td></tr>
+    <tr><td>USR-G03</td><td>High</td><td>Create does not disable against repeated clicks.</td><td>Duplicate requests/users may be created.</td><td>Use pending state and backend idempotency.</td></tr>
+    <tr><td>USR-G04</td><td>High</td><td>Edit mutates Redux state and returns the same object.</td><td>Saved values may not refresh reliably.</td><td>Return a new state and updated array/item.</td></tr>
+    <tr><td>USR-G05</td><td>High</td><td>Source handling differs across create, edit, and suspend.</td><td>User may be created/updated in the wrong source or data may be overwritten.</td><td>Approve and centralize authoritative source rule.</td></tr>
+    <tr><td>USR-G06</td><td>Medium</td><td>List request errors look like an empty list.</td><td>Operators may believe there are no users.</td><td>Add distinct error state and Retry.</td></tr>
+    <tr><td>USR-G07</td><td>Medium</td><td>CSV export is not activated due to <code>exportcsv</code>/<code>exportCsv</code> mismatch.</td><td>Advertised/expected export is unavailable.</td><td>Correct the prop and approve exported fields.</td></tr>
+    <tr><td>USR-G08</td><td>Medium</td><td>Table key is configured as <code>Id</code> while data uses <code>id</code>.</td><td>Index-based keys may cause unstable rendering after filtering/reordering.</td><td>Use <code>keyField="id"</code>.</td></tr>
+    <tr><td>USR-G09</td><td>Medium</td><td>Pagination starts at 10 but 10 is absent from page-size options.</td><td>UI and actual row count can disagree.</td><td>Include 10 or set default to 25.</td></tr>
+    <tr><td>USR-G10</td><td>Medium</td><td>Required input validation checks only truthiness.</td><td>Invalid names, emails, or phones may reach backend.</td><td>Add normalized field validation and backend validation.</td></tr>
+    <tr><td>USR-G11</td><td>Medium</td><td>Suspend has no confirmation and no visible API result.</td><td>Accidental suspension and uncertain outcome.</td><td>Add confirmation and success/error feedback.</td></tr>
+    <tr><td>USR-G12</td><td>Medium</td><td>Delete modal closes on an unsuccessful API response.</td><td>Operator may assume deletion succeeded.</td><td>Close only after success.</td></tr>
+    <tr><td>USR-G13</td><td>Medium</td><td>Card lookup runs in Add mode with empty identity data.</td><td>Unnecessary request and ambiguous logs/errors.</td><td>Fetch cards only for a persisted user in Edit mode.</td></tr>
+    <tr><td>USR-G14</td><td>Medium</td><td>Card deletion exceptions provide no visible recovery state.</td><td>Operator cannot tell whether the card changed.</td><td>Reset pending state and show retryable error.</td></tr>
+    <tr><td>USR-G15</td><td>Low</td><td>Edit modal subtitle says “Create a new user.”</td><td>Confusing instructions.</td><td>Use mode-specific wording.</td></tr>
+    <tr><td>USR-G16</td><td>Low</td><td>Japanese tooltip describes the Suspend icon as user deletion.</td><td>Wrong action expectation.</td><td>Translate according to approved action semantics.</td></tr>
+    <tr><td>USR-G17</td><td>Low</td><td>Hero description mentions permissions and assigned devices not managed on this screen.</td><td>Misleading scope.</td><td>Update copy or implement approved capabilities.</td></tr>
+  </table>
+
+  <h2>21. Test Scenario Register</h2>
+
+  <table>
+    <tr><th>Test ID</th><th>Scenario</th><th>Expected result</th><th>Linked criteria</th><th>Status</th></tr>
+    <tr><td>USR-T01</td><td>Load users successfully</td><td>Only authorized partner users appear</td><td>AC01</td><td>Not run</td></tr>
+    <tr><td>USR-T02</td><td>Load returns empty</td><td>Empty state, not error state</td><td>AC03</td><td>Not run</td></tr>
+    <tr><td>USR-T03</td><td>Load network failure and retry</td><td>Error appears; retry can recover</td><td>AC04</td><td>Not run</td></tr>
+    <tr><td>USR-T04</td><td>Unauthorized direct URL access</td><td>Denied; no user data returned</td><td>AC05</td><td>Not run</td></tr>
+    <tr><td>USR-T05</td><td>Search partial mixed-case email</td><td>Correct filtered result</td><td>AC06</td><td>Not run</td></tr>
+    <tr><td>USR-T06</td><td>Export filtered list</td><td>Correct rows/columns and no action content</td><td>AC09–10</td><td>Not run</td></tr>
+    <tr><td>USR-T07</td><td>Create with blank/whitespace values</td><td>Submission blocked</td><td>AC11</td><td>Not run</td></tr>
+    <tr><td>USR-T08</td><td>Create with invalid email/phone</td><td>Submission blocked with field feedback</td><td>AC12–13</td><td>Not run</td></tr>
+    <tr><td>USR-T09</td><td>Double-click Create</td><td>One request and one user</td><td>AC14–15</td><td>Not run</td></tr>
+    <tr><td>USR-T10</td><td>Create duplicate email</td><td>Clear error; values preserved</td><td>AC16</td><td>Not run</td></tr>
+    <tr><td>USR-T11</td><td>Edit name and status</td><td>Correct user updates immediately</td><td>AC18–20</td><td>Not run</td></tr>
+    <tr><td>USR-T12</td><td>Edit API failure</td><td>No false update; clear error</td><td>AC21</td><td>Not run</td></tr>
+    <tr><td>USR-T13</td><td>Close dirty Edit modal</td><td>Confirmation appears</td><td>AC22</td><td>Not run</td></tr>
+    <tr><td>USR-T14</td><td>Cancel suspension</td><td>No API call/status change</td><td>AC23</td><td>Not run</td></tr>
+    <tr><td>USR-T15</td><td>Suspend success/failure</td><td>Status follows confirmed backend result</td><td>AC24–25</td><td>Not run</td></tr>
+    <tr><td>USR-T16</td><td>Reactivate user</td><td>User becomes Active if permitted</td><td>AC27</td><td>Not run</td></tr>
+    <tr><td>USR-T17</td><td>Delete canceled</td><td>No request</td><td>AC28</td><td>Not run</td></tr>
+    <tr><td>USR-T18</td><td>Delete success/failure/dependency block</td><td>UI matches backend outcome and retention policy</td><td>AC29–31</td><td>Not run</td></tr>
+    <tr><td>USR-T19</td><td>Assign card with/without corporate card</td><td>Allowed case succeeds; ineligible case is blocked</td><td>AC33–36</td><td>Not run</td></tr>
+    <tr><td>USR-T20</td><td>Remove card success/failure</td><td>Association display follows backend outcome</td><td>AC37–39</td><td>Not run</td></tr>
+    <tr><td>USR-T21</td><td>Open Support from user row</td><td>Correct email is searched within authorization scope</td><td>AC40–42</td><td>Not run</td></tr>
+  </table>
+
+  <h2>22. Approval and Change-Control Procedure</h2>
+
+  <h3>22.1 Initial approval</h3>
+  <ol>
+    <li>The document owner completes the business-owner and approver fields.</li>
+    <li>The development team reviews AS-IS accuracy and records corrections as Google Docs suggestions.</li>
+    <li>The manager resolves every item in Section 19 and records decisions in Section 23.</li>
+    <li>The document owner updates PROPOSED requirements to match the decisions.</li>
+    <li>QA confirms that acceptance criteria are testable.</li>
+    <li>The manager comments: <strong>“Approved PRFS-USR-001 version X.Y for implementation”</strong>.</li>
+    <li>The document owner accepts agreed suggestions, updates the version, changes status to Approved, and creates a named Google Docs version.</li>
+  </ol>
+
+  <h3>22.2 Changing an approved existing flow</h3>
+  <ol>
+    <li>Add a Change Request row to Section 24 before editing approved behavior.</li>
+    <li>Describe the existing behavior, proposed behavior, reason, affected flow/rule IDs, UI/API/data impact, testing impact, and estimated schedule impact.</li>
+    <li>Use Suggesting mode for document edits. Do not directly replace the approved text.</li>
+    <li>Development performs impact analysis and marks unresolved items OPEN.</li>
+    <li>The manager approves or rejects the specific Change Request in writing.</li>
+    <li>Only after approval, accept the suggestions, increment the document version, update acceptance tests, and create a named version.</li>
+    <li>Link implementation commits/tasks and release evidence to the Change Request.</li>
+  </ol>
+
+  <h3>22.3 Adding a new User flow</h3>
+  <ol>
+    <li>Create a new flow ID in sequence, such as <code>USR-F10</code>.</li>
+    <li>Document actor, trigger, preconditions, main flow, alternate/error flows, data fields, business rules, permissions, API impact, audit requirement, and acceptance criteria.</li>
+    <li>Add open business decisions to Section 19 or the Decision Log.</li>
+    <li>Follow the same review and manager approval process before implementation.</li>
+  </ol>
+
+  <h3>22.4 Approval states</h3>
+  <div class="flow">Draft → Team Review → Manager Review → Approved → In Development → QA/UAT → Released
+                     ↘ Needs Changes / Rejected
+
+Any modification after Approved → Change Request → Manager Review → New Approved Version</div>
+
+  <h3>22.5 Google Docs operating rules</h3>
+  <ul>
+    <li>Use one shared document owned by a company-controlled account.</li>
+    <li>Developers use Suggesting mode for approved sections.</li>
+    <li>Do not resolve an approval comment until the decision is entered in the Decision Log.</li>
+    <li>Name approved versions as <code>PRFS-USR-001 vX.Y — Approved — YYYY-MM-DD</code>.</li>
+    <li>Never delete an approved requirement; mark it Superseded and link its replacement.</li>
+    <li>Verbal discussions are notes, not approval. Add the confirmed decision to this document.</li>
+    <li>Export a PDF after each approved version if an additional immutable snapshot is desired.</li>
+  </ul>
+
+  <h2>23. Decision Log</h2>
+
+  <table>
+    <tr><th>Decision ID</th><th>Date</th><th>Related IDs</th><th>Decision</th><th>Alternatives considered</th><th>Decided by</th><th>Evidence/comment link</th></tr>
+    <tr><td>USR-DEC-001</td><td>Pending</td><td>USR-D01, USR-F05, USR-F06</td><td>Pending: user deletion policy</td><td>Suspend / Archive / Hard delete</td><td>Pending</td><td>Pending</td></tr>
+    <tr><td>USR-DEC-002</td><td>Pending</td><td>USR-D02</td><td>Pending: permission matrix</td><td>Role-based options</td><td>Pending</td><td>Pending</td></tr>
+    <tr><td>USR-DEC-003</td><td>Pending</td><td>USR-D03, USR-D04</td><td>Pending: source ownership rules</td><td>Fixed / operator / row / backend</td><td>Pending</td><td>Pending</td></tr>
+  </table>
+
+  <h2>24. Change Request Register</h2>
+
+  <table>
+    <tr><th>CR ID</th><th>Date</th><th>Requester</th><th>Affected IDs</th><th>Current behavior</th><th>Proposed change and reason</th><th>Impact</th><th>Decision</th><th>Approver/date</th><th>Release</th></tr>
+    <tr><td>USR-CR-001</td><td>—</td><td>—</td><td>—</td><td>—</td><td>Template row; replace when the first change is requested.</td><td>—</td><td>Draft</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <h2>25. Formal Sign-Off</h2>
+
+  <table>
+    <tr><th>Role</th><th>Name</th><th>Decision</th><th>Approved document version</th><th>Date</th><th>Comment/evidence</th></tr>
+    <tr><td>Business Owner / Manager</td><td>Pending</td><td>Pending</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>Product/Operations Representative</td><td>Pending</td><td>Pending</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>Technical Lead</td><td>Pending</td><td>Technical review pending</td><td>—</td><td>—</td><td>—</td></tr>
+    <tr><td>QA Representative</td><td>Pending</td><td>Testability review pending</td><td>—</td><td>—</td><td>—</td></tr>
+  </table>
+
+  <div class="approved">
+    <strong>Suggested approval wording:</strong><br>
+    “I approve PRFS-USR-001 version ____ as the agreed User Management flow baseline. Any later change must be recorded and approved through the Change Request procedure in Section 22.”
+  </div>
+
+  <h2>Appendix A — Current Flow Summary</h2>
+
+  <div class="flow">Open Users
+  → POST /jane/getCorpUsers
+  → Show user table
+      ├─ Support → /admin/support with email search
+      ├─ Edit → Update profile/status
+      │           ├─ Assign corporate card (if none)
+      │           ├─ Remove corporate card (if present)
+      │           └─ Delete user (confirmation)
+      ├─ Suspend → Immediate Edit request with active = 0
+      └─ Add User → POST /jane/addCorpUser with requestType = Add</div>
+
+  <h2>Appendix B — Traceability Matrix</h2>
+
+  <table>
+    <tr><th>Flow</th><th>Business rules</th><th>Acceptance criteria</th><th>Primary code evidence</th></tr>
+    <tr><td>USR-F01 Load users</td><td>BR01, BR11</td><td>AC01–05</td><td><code>Users.jsx</code>, <code>Admin.js</code></td></tr>
+    <tr><td>USR-F02 Table operations</td><td>BR01</td><td>AC06–10</td><td><code>Users.jsx</code>, <code>SupportTableAdapter.js</code></td></tr>
+    <tr><td>USR-F03 Create</td><td>BR01–04, BR10–12</td><td>AC11–17</td><td><code>UserModal.js</code>, <code>auth.reducer.js</code></td></tr>
+    <tr><td>USR-F04 Edit</td><td>BR01–03, BR10–11</td><td>AC18–22</td><td><code>UserModal.js</code>, <code>auth.reducer.js</code></td></tr>
+    <tr><td>USR-F05 Suspend/reactivate</td><td>BR05–06, BR10–11</td><td>AC23–27</td><td><code>Users.jsx</code>, <code>UserModal.js</code></td></tr>
+    <tr><td>USR-F06 Delete</td><td>BR05–07, BR10–11</td><td>AC28–32</td><td><code>UserModal.js</code>, <code>actiontypes.js</code>, <code>auth.reducer.js</code></td></tr>
+    <tr><td>USR-F07 Assign card</td><td>BR08–12</td><td>AC33–36</td><td><code>UserModal.js</code>, <code>general.services.js</code></td></tr>
+    <tr><td>USR-F08 Remove card</td><td>BR08–11</td><td>AC37–39</td><td><code>UserModal.js</code>, <code>general.services.js</code></td></tr>
+    <tr><td>USR-F09 Open Support</td><td>BR01, BR11</td><td>AC40–42</td><td><code>Users.jsx</code>, <code>Support.jsx</code></td></tr>
+    <tr><td>TOP-F01 Bulk Top-up</td><td>TOP-BR01–10</td><td>TOP-AC01–14</td><td><code>SharedAddPlan.jsx</code>, <code>useAddPlan.jsx</code>, <code>bulkTopupDeviceFlow.js</code>, <code>authToken.js</code>, <code>general.services.js</code></td></tr>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>Appendix C — Bulk Top-up Flow and Strict Token Resolution Addendum</h2>
+
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Addendum ID</td><td>PRFS-TOP-ADD-001</td></tr>
+    <tr><td>Related document</td><td>PRFS-USR-001 version 0.2</td></tr>
+    <tr><td>Route</td><td><code>/admin/bulktopup</code></td></tr>
+    <tr><td>Status</td><td><span class="status">PROPOSED — REQUIRES BUSINESS AND TECHNICAL APPROVAL</span></td></tr>
+    <tr><td>Purpose</td><td>Record the current Bulk Top-up sequence and define a safe, consistent rule for selecting or fetching the bearer token for every API request.</td></tr>
+  </table>
+
+  <div class="notice">
+    <strong>Implementation status:</strong> The Bulk Top-up sequence and token mismatch below are based on the current frontend source. The strict token resolver is a proposed solution and has not yet been implemented. Backend authorization behavior must be confirmed before release.
+  </div>
+
+  <h3>C.1 Identity Terms</h3>
+
+  <table>
+    <tr><th>Term</th><th>Meaning</th><th>Example</th></tr>
+    <tr><td>Portal operator / corporate user</td><td>The person currently logged in to the Corporate Portal. The corporate card is fetched for this identity.</td><td><code>corporate@example.com</code></td></tr>
+    <tr><td>Device owner / assigned end user</td><td>The user returned by <code>getJaneUsers</code> for the entered device. The plan is added for this identity.</td><td><code>customer@example.com</code></td></tr>
+    <tr><td>Payload email</td><td>A syntactically valid email found in an approved identity field of the final API payload.</td><td><code>userId</code> or <code>corp_id</code></td></tr>
+    <tr><td>Matching token</td><td>A token stored or fetched specifically for the normalized payload email. A token belonging to another email is not a match.</td><td>Token for <code>customer@example.com</code></td></tr>
+  </table>
+
+  <h3>C.2 Current Bulk Top-up Flow — TOP-F01 (AS-IS)</h3>
+
+  <ol>
+    <li>The operator opens <code>/admin/bulktopup</code>. The screen renders the shared Add Plan component in Bulk Top-up mode.</li>
+    <li>The screen loads the available partner list. Group 7 uses <code>getReseller</code>; other supported groups use <code>getDistributors</code>.</li>
+    <li>The operator selects a partner, which calls <code>getPartnerPlans</code>, or enters a plan code, which calls <code>getLocalPlan</code>.</li>
+    <li>When a plan is selected, the portal loads its countries and variations through <code>planCountries</code> and <code>getPlanVariations</code>.</li>
+    <li>The operator selects the variation and related plan options, enters between 1 and 30 device IDs, then clicks <strong>Add Bulk Top Up</strong>.</li>
+    <li>The portal processes devices sequentially. For each device it calls <code>/jane/getJaneUsers</code> using the device ID to find the assigned end user.</li>
+    <li>If charges are not suppressed, it calls <code>getUserCardsEnc</code> using the logged-in corporate user’s email and application-user ID, then selects the corporate card whose payment gateway is <code>crpc</code>.</li>
+    <li>It calls <code>topupRequest</code> at <code>/yw-services/api/order/plan</code>. The request contains the assigned device owner’s email in <code>userId</code>, the assigned user’s ID in <code>appUserId</code>, the device ID, plan details, and the corporate card information.</li>
+    <li>The portal records success or failure for that device. Processing pauses for 20 seconds after each group of 10 devices before continuing.</li>
+  </ol>
+
+  <div class="flow">Open Bulk Top-up
+  → Load partners/resellers
+  → Select partner or look up plan code
+  → Load plan countries and variations
+  → Enter 1–30 device IDs
+  → For each device, sequentially:
+      1. getJaneUsers(device ID) → assigned end user
+      2. getUserCardsEnc(corporate email) → corporate CRPC card, unless charges suppressed
+      3. topupRequest(device-owner email) → add plan
+      4. Record per-device result
+  → Pause 20 seconds after each 10 devices
+  → Show completion results</div>
+
+  <h3>C.3 API Identity and Token Ownership</h3>
+
+  <table>
+    <tr><th>Call</th><th>Important identity fields</th><th>Business purpose</th><th>Required token owner</th></tr>
+    <tr><td><code>getJaneUsers</code></td><td><code>user_id</code> = device ID; <code>corp_id</code> = corporate email</td><td>Find the user assigned to the device.</td><td>The valid email is <code>corp_id</code>; use the matching corporate token. A device ID must not be treated as an email.</td></tr>
+    <tr><td><code>getUserCardsEnc</code></td><td><code>userId</code> = corporate email; <code>appUserId</code> = corporate application-user ID</td><td>Fetch the corporate payment card.</td><td>Token matching the corporate email.</td></tr>
+    <tr><td><code>topupRequest</code></td><td><code>userId</code> = assigned device owner’s email; <code>appUserId</code> = assigned end-user ID</td><td>Add the selected plan to the assigned user/device.</td><td>Token matching the assigned device owner’s email.</td></tr>
+    <tr><td><code>getStateData</code></td><td>Email and source are inside encrypted <code>data</code></td><td>Fetch a token for the requested email when it is not cached.</td><td>No bearer token under the proposed generic rule; see dependency C.9.</td></tr>
+  </table>
+
+  <h3>C.4 Current Token Defect — TOP-G01 (AS-IS)</h3>
+
+  <div class="gap">
+    <strong>Problem:</strong> The current <code>getBearerToken(payload)</code> returns the cached end-user token only when its email matches the first identity-like payload value. In every other case it returns the logged-in admin token. It does not require the admin token’s email to match the payload email.
+  </div>
+
+  <p>Example failure scenario:</p>
+
+  <ol>
+    <li>The logged-in operator is <code>corporate@example.com</code>, and the stored admin token belongs to that email.</li>
+    <li>Device <code>D-1001</code> is assigned to <code>customer@example.com</code>.</li>
+    <li><code>topupRequest</code> correctly puts <code>customer@example.com</code> in the payload’s <code>userId</code>.</li>
+    <li>No cached <code>janeuser</code> token exists for <code>customer@example.com</code>, or the cached token belongs to a different end user.</li>
+    <li>The current resolver falls back to the admin token for <code>corporate@example.com</code>.</li>
+    <li>The API therefore receives a payload for <code>customer@example.com</code> with a bearer token belonging to <code>corporate@example.com</code>. Because a truthy token was returned, the dispatcher does not fetch the customer’s token.</li>
+  </ol>
+
+  <p>A second defect is that the current payload resolver accepts the first non-empty identity-like field without confirming that it is an email. For <code>getJaneUsers</code>, it can select the device ID from <code>user_id</code> before reaching the corporate email in <code>corp_id</code>.</p>
+
+  <h3>C.5 Proposed Global Token Rule (TO-BE)</h3>
+
+  <p>The application shall use one universal rule based on the final request payload. The rule shall not require individual screens to decide whether an admin or end-user token is needed.</p>
+
+  <table>
+    <tr><th>ID</th><th>Required behavior</th></tr>
+    <tr><td>TOP-BR01</td><td>Inspect only approved identity fields and accept a value only when it is a syntactically valid email after trimming and lowercasing.</td></tr>
+    <tr><td>TOP-BR02</td><td>If the payload contains a valid email and a cached token has the same normalized email, use that exact token regardless of whether it is currently labelled <code>admin</code> or <code>janeuser</code>.</td></tr>
+    <tr><td>TOP-BR03</td><td>If the payload contains a valid email but no exact cached match exists, call <code>/user/getStateData</code> for that email and source.</td></tr>
+    <tr><td>TOP-BR04</td><td>Store a successfully fetched token together with the same normalized email, then use it for the original request.</td></tr>
+    <tr><td>TOP-BR05</td><td>If token retrieval fails or returns no usable token for an email-bound protected request, abort that request and return a clear error. Do not substitute another identity’s token.</td></tr>
+    <tr><td>TOP-BR06</td><td>If the payload contains no valid email, do not add an <code>Authorization</code> header. Do not silently use the logged-in admin token.</td></tr>
+    <tr><td>TOP-BR07</td><td>Never send <code>Bearer null</code>, <code>Bearer undefined</code>, an empty bearer value, or a bearer token known to belong to another email.</td></tr>
+    <tr><td>TOP-BR08</td><td>All service callers shall await token resolution before building and sending the request.</td></tr>
+    <tr><td>TOP-BR09</td><td>The token decision shall be made from the final API payload after request mapping, so the identity used for authorization is the identity actually sent to the endpoint.</td></tr>
+    <tr><td>TOP-BR10</td><td>Token-fetch failures shall be handled per device in Bulk Top-up, allowing the result table to identify the failed device without applying the plan under the wrong identity.</td></tr>
+  </table>
+
+  <h3>C.6 Proposed Resolver Design</h3>
+
+  <p>The following is reference logic for implementation review. Exact naming may change, but the rules in C.5 must remain true.</p>
+
+  <pre><code>const EMAIL_FIELDS = [
+  'userId', 'user_id', 'email',
+  'partnerId', 'partner_id', 'corp_id', 'corpId'
+];
+
+function isValidEmail(value) {
+  return typeof value === 'string' &amp;&amp;
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+export function resolvePayloadEmail(payload) {
+  for (const field of EMAIL_FIELDS) {
+    const value = payload?.[field];
+    if (isValidEmail(value)) return value.trim().toLowerCase();
+  }
+  return '';
+}
+
+export async function getBearerToken(payload) {
+  const email = resolvePayloadEmail(payload);
+  if (!email) return null;
+
+  const { admin, janeuser } = store.getState().janeuser?.tokens || {};
+  if (admin?.email === email &amp;&amp; admin?.token) return admin.token;
+  if (janeuser?.email === email &amp;&amp; janeuser?.token) return janeuser.token;
+
+  const token = await getTokenData({ userId: email, source: payload?.source });
+  if (!token) throw new Error(`Unable to obtain a token for ${email}`);
+  return token;
+}</code></pre>
+
+  <p>Each service wrapper shall then await the resolver and add the header only when a token exists:</p>
+
+  <pre><code>const bearerToken = await getBearerToken(finalPayload);
+const headers = { 'Content-Type': 'application/json' };
+if (bearerToken) headers.Authorization = `Bearer ${bearerToken}`;</code></pre>
+
+  <div class="info">
+    <strong>Important implementation impact:</strong> Changing <code>getBearerToken</code> to an asynchronous resolver affects every current caller, including the generic service wrappers, dispatcher, API client, and any direct component calls. Each caller must be audited and updated to await the result. The implementation must also prevent recursive token fetching when <code>getTokenData</code> itself calls <code>getStateData</code>.
+  </div>
+
+  <h3>C.7 Resulting Bulk Top-up Token Sequence (TO-BE)</h3>
+
+  <div class="flow">For each device:
+  1. getJaneUsers payload contains device ID + corporate email
+     → Skip device ID because it is not an email
+     → Resolve exact corporate-email token
+     → Fetch it through getStateData only if not cached
+  2. getUserCardsEnc payload contains corporate email
+     → Reuse/fetch exact corporate-email token
+  3. topupRequest payload contains assigned owner email
+     → Reuse exact owner token when cached
+     → Otherwise call getStateData for that owner email
+     → Save and use the returned owner token
+     → If no owner token is obtained, do not call topupRequest
+  4. Record the device result and continue according to the batch policy</div>
+
+  <p>This means the card lookup intentionally uses the corporate user’s token, while the final top-up intentionally uses the assigned device owner’s token. The selection is derived from each payload’s valid email; it is not hard-coded by screen or endpoint.</p>
+
+  <h3>C.8 Acceptance Criteria</h3>
+
+  <table>
+    <tr><th>ID</th><th>Acceptance criterion</th></tr>
+    <tr><td>TOP-AC01</td><td>A device ID or any other non-email value in an identity-like field is ignored during email resolution.</td></tr>
+    <tr><td>TOP-AC02</td><td>Email comparison is performed after trimming and lowercasing both the payload and cached token email.</td></tr>
+    <tr><td>TOP-AC03</td><td>When the payload email exactly matches the cached admin email, the matching admin token is used.</td></tr>
+    <tr><td>TOP-AC04</td><td>When the payload email exactly matches the cached end-user email, the matching end-user token is used.</td></tr>
+    <tr><td>TOP-AC05</td><td>When neither cache entry matches a valid payload email, <code>getStateData</code> is called using that email and the applicable source.</td></tr>
+    <tr><td>TOP-AC06</td><td>A successfully fetched token is saved against its normalized email and is used for the pending API request.</td></tr>
+    <tr><td>TOP-AC07</td><td>If token retrieval fails for a valid payload email, the protected API call is not sent and an actionable error is returned.</td></tr>
+    <tr><td>TOP-AC08</td><td>If no valid email exists in the payload, the request is sent without an <code>Authorization</code> header, subject to the endpoint contract.</td></tr>
+    <tr><td>TOP-AC09</td><td>No request contains <code>Bearer null</code>, <code>Bearer undefined</code>, an empty bearer value, or a token associated with another email.</td></tr>
+    <tr><td>TOP-AC10</td><td><code>getJaneUsers</code> resolves the corporate email from <code>corp_id</code> and does not treat its device-valued <code>user_id</code> as an email.</td></tr>
+    <tr><td>TOP-AC11</td><td><code>getUserCardsEnc</code> uses a token matching the logged-in corporate email in its <code>userId</code>.</td></tr>
+    <tr><td>TOP-AC12</td><td><code>topupRequest</code> uses a token matching the assigned device owner email in its <code>userId</code>, including when the owner token was not previously cached.</td></tr>
+    <tr><td>TOP-AC13</td><td>A token failure for one device appears as a failure for that device and never causes another user’s token to be used.</td></tr>
+    <tr><td>TOP-AC14</td><td>All existing token-resolver callers are updated for asynchronous behavior and pass regression tests.</td></tr>
+  </table>
+
+  <h3>C.9 Required Tests</h3>
+
+  <table>
+    <tr><th>Test ID</th><th>Setup / action</th><th>Expected result</th></tr>
+    <tr><td>TOP-T01</td><td>Payload email equals the cached admin email.</td><td>The admin-labelled token is used because its email is an exact match; no token-fetch call occurs.</td></tr>
+    <tr><td>TOP-T02</td><td>Payload email equals the cached end-user email.</td><td>The end-user-labelled token is used; no token-fetch call occurs.</td></tr>
+    <tr><td>TOP-T03</td><td>Payload has a valid email that matches neither cached entry.</td><td><code>getStateData</code> fetches that email’s token; the fetched token is stored and used.</td></tr>
+    <tr><td>TOP-T04</td><td>Payload has a valid email, but <code>getStateData</code> fails or returns no token.</td><td>The protected business API is not called; a clear token-resolution failure is produced.</td></tr>
+    <tr><td>TOP-T05</td><td>Payload has no valid email.</td><td>No token fetch occurs and no <code>Authorization</code> header is added.</td></tr>
+    <tr><td>TOP-T06</td><td><code>getJaneUsers</code> contains a device ID in <code>user_id</code> and corporate email in <code>corp_id</code>.</td><td>The device ID is skipped and the corporate email is resolved.</td></tr>
+    <tr><td>TOP-T07</td><td>Bulk top-up is performed for a device owner different from the logged-in corporate user.</td><td>Card lookup uses the corporate token; <code>topupRequest</code> uses the device owner’s token.</td></tr>
+    <tr><td>TOP-T08</td><td>Run a multi-device batch containing different assigned owner emails.</td><td>Each <code>topupRequest</code> uses the token matching that row’s owner email; a prior row’s cached token is never reused on mismatch.</td></tr>
+    <tr><td>TOP-T09</td><td>Inspect requests across all updated service wrappers.</td><td>No Promise object, null token, undefined token, empty bearer value, or unrelated token appears in a header.</td></tr>
+    <tr><td>TOP-T10</td><td>Call <code>getStateData</code> through the resolver’s cache-miss path.</td><td>The call completes without recursion and follows the approved bootstrap authorization contract.</td></tr>
+  </table>
+
+  <h3>C.10 Dependencies and Open Decisions</h3>
+
+  <table>
+    <tr><th>ID</th><th>Decision or confirmation required</th><th>Owner</th><th>Status</th></tr>
+    <tr><td>TOP-D01</td><td>Confirm that <code>/user/getStateData</code> is permitted to receive its encrypted identity payload without an <code>Authorization</code> header. If not, define an explicit bootstrap credential that does not reuse an unrelated user token.</td><td>Backend/Security</td><td>Open</td></tr>
+    <tr><td>TOP-D02</td><td>Approve the ordered list of fields that are allowed to identify the token owner. Confirm whether <code>partnerId</code> and <code>partner_id</code> always contain emails when used for authorization.</td><td>Backend/Product</td><td>Open</td></tr>
+    <tr><td>TOP-D03</td><td>Confirm which endpoints may legally operate without an <code>Authorization</code> header when their payload has no valid email.</td><td>Backend/Security</td><td>Open</td></tr>
+    <tr><td>TOP-D04</td><td>Decide whether the token store should become an email-keyed map instead of retaining only one <code>janeuser</code> token. A map can reduce repeated token retrieval and avoid concurrent-request overwrites.</td><td>Technical Lead</td><td>Open</td></tr>
+    <tr><td>TOP-D05</td><td>Confirm the user-visible message and retry behavior when token retrieval fails for one item in a Bulk Top-up batch.</td><td>Product/Operations</td><td>Open</td></tr>
+  </table>
+
+  <h3>C.11 Approval Record for This Addendum</h3>
+
+  <table>
+    <tr><th>Role</th><th>Name</th><th>Decision</th><th>Version</th><th>Date</th><th>Comment/evidence</th></tr>
+    <tr><td>Business Owner / Manager</td><td>Pending</td><td>Pending</td><td>0.2</td><td>—</td><td>—</td></tr>
+    <tr><td>Backend/Security Reviewer</td><td>Pending</td><td>Pending</td><td>0.2</td><td>—</td><td>Must resolve TOP-D01–03</td></tr>
+    <tr><td>Technical Lead</td><td>Pending</td><td>Pending</td><td>0.2</td><td>—</td><td>Must approve async caller impact and storage design</td></tr>
+    <tr><td>QA Representative</td><td>Pending</td><td>Pending</td><td>0.2</td><td>—</td><td>Must confirm TOP-T01–10 coverage</td></tr>
+  </table>
+
+  <div class="approved">
+    <strong>Suggested addendum approval wording:</strong><br>
+    “I approve PRFS-TOP-ADD-001 in PRFS-USR-001 version 0.2 as the required Bulk Top-up and payload-email token-resolution behavior, subject to the recorded resolutions of TOP-D01 through TOP-D05. Implementation may begin only after the required technical confirmations are entered in this document.”
+  </div>
+
+  <p class="small">End of PRFS-USR-001 version 0.2.</p>
+
+  <script>
+    (() => {
+      const header = document.querySelector('.site-header');
+      const moduleNav = document.querySelector('.module-nav');
+      const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
+      const moduleMenus = Array.from(document.querySelectorAll('.module-menu'));
+      const moduleTriggers = Array.from(document.querySelectorAll('.module-trigger'));
+      const flowItems = Array.from(document.querySelectorAll('.flow-menu__item[data-flow]'));
+      const script = document.currentScript;
+      const panels = new Map();
+      const flowOrder = [
+        'overview',
+        'load-users',
+        'search-export',
+        'create-user',
+        'edit-user',
+        'user-status',
+        'delete-user',
+        'cards',
+        'support',
+        'governance',
+        'bulk-topup'
+      ];
+
+      const featureForHeading = (heading) => {
+        const text = heading.trim();
+        if (/^9\./.test(text)) return 'load-users';
+        if (/^10\./.test(text)) return 'search-export';
+        if (/^11\./.test(text)) return 'create-user';
+        if (/^12\./.test(text)) return 'edit-user';
+        if (/^13\./.test(text)) return 'user-status';
+        if (/^14\./.test(text)) return 'delete-user';
+        if (/^(15|16)\./.test(text)) return 'cards';
+        if (/^17\./.test(text)) return 'support';
+        if (/^(18|19|20|21|22|23|24|25)\./.test(text)) return 'governance';
+        if (/^Appendix [AB]/.test(text)) return 'governance';
+        if (/^Appendix C/.test(text)) return 'bulk-topup';
+        return 'overview';
+      };
+
+      flowOrder.forEach((feature) => {
+        const flowItem = flowItems.find((item) => item.dataset.flow === feature);
+        const panel = document.createElement('main');
+        panel.className = 'feature-panel';
+        panel.id = `panel-${feature}`;
+        panel.setAttribute('role', 'region');
+        panel.setAttribute('aria-label', flowItem?.textContent.trim() || feature);
+        panels.set(feature, panel);
+        document.body.insertBefore(panel, script);
+      });
+
+      let currentFeature = 'overview';
+      const contentNodes = Array.from(document.body.children).filter((node) => node !== header && node !== script && !node.classList.contains('feature-panel'));
+
+      contentNodes.forEach((node) => {
+        if (node.tagName === 'H2') currentFeature = featureForHeading(node.textContent);
+        panels.get(currentFeature).appendChild(node);
+      });
+
+      const closeModuleMenus = () => {
+        moduleMenus.forEach((menu) => menu.classList.remove('is-open'));
+        moduleTriggers.forEach((trigger) => trigger.setAttribute('aria-expanded', 'false'));
+      };
+
+      const moduleForFlow = (feature) => {
+        return flowItems.find((item) => item.dataset.flow === feature)?.closest('.module-menu')?.dataset.module || 'users';
+      };
+
+      const selectFeature = (requestedFeature, updateUrl = true) => {
+        const feature = panels.has(requestedFeature) ? requestedFeature : 'overview';
+        const activeModule = moduleForFlow(feature);
+
+        panels.forEach((panel, panelFeature) => {
+          panel.hidden = panelFeature !== feature;
+        });
+
+        flowItems.forEach((item) => {
+          const selected = item.dataset.flow === feature;
+          item.classList.toggle('is-active', selected);
+          item.setAttribute('aria-current', selected ? 'page' : 'false');
+        });
+
+        moduleMenus.forEach((menu) => {
+          const selected = menu.dataset.module === activeModule;
+          menu.classList.toggle('is-active', selected);
+          menu.querySelector('.module-trigger')?.classList.toggle('is-active', selected);
+        });
+
+        const meta = document.querySelector('.site-header__meta');
+        if (meta) meta.textContent = activeModule === 'bulktopup' ? 'Bulk Topup · PRFS-TOP-ADD-001' : 'User flows · PRFS-USR-001 v0.2';
+
+        closeModuleMenus();
+
+        if (updateUrl) {
+          history.replaceState(null, '', `#${activeModule}/${feature}`);
+          moduleNav.classList.remove('is-expanded');
+          mobileNavToggle.setAttribute('aria-expanded', 'false');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      moduleMenus.forEach((menu, index) => {
+        const trigger = menu.querySelector('.module-trigger');
+        const flowMenu = menu.querySelector('.flow-menu');
+        const menuId = `flow-menu-${menu.dataset.module}`;
+        flowMenu.id = menuId;
+        trigger.setAttribute('aria-controls', menuId);
+        trigger.setAttribute('aria-haspopup', 'menu');
+
+        trigger.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const willOpen = !menu.classList.contains('is-open');
+          closeModuleMenus();
+          if (willOpen) {
+            menu.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+          }
+        });
+
+        trigger.addEventListener('keydown', (event) => {
+          if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+            event.preventDefault();
+            const offset = event.key === 'ArrowRight' ? 1 : -1;
+            moduleTriggers[(index + offset + moduleTriggers.length) % moduleTriggers.length].focus();
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            trigger.click();
+            flowMenu.querySelector('.flow-menu__item:not(:disabled)')?.focus();
+          }
+        });
+      });
+
+      flowItems.forEach((item) => {
+        item.addEventListener('click', () => selectFeature(item.dataset.flow));
+      });
+
+      mobileNavToggle.addEventListener('click', () => {
+        const expanded = moduleNav.classList.toggle('is-expanded');
+        mobileNavToggle.setAttribute('aria-expanded', String(expanded));
+        if (!expanded) closeModuleMenus();
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!event.target.closest('.module-menu')) closeModuleMenus();
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeModuleMenus();
+          moduleNav.classList.remove('is-expanded');
+          mobileNavToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      const featureFromHash = () => location.hash.slice(1).split('/').filter(Boolean).pop() || 'overview';
+      window.addEventListener('hashchange', () => selectFeature(featureFromHash(), false));
+      selectFeature(featureFromHash(), false);
+    })();
+  </script>
+</body>
+</html>
