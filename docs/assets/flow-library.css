@@ -392,6 +392,10 @@ a:focus-visible {
   text-decoration: none;
 }
 
+.reference-link[hidden] {
+  display: none;
+}
+
 .map-card {
   position: relative;
   padding: 22px;

@@ -1,12 +1,19 @@
 {
   "modules": [
     { "id": "dashboard", "label": "Dashboard", "status": "planned", "flows": [] },
-    { "id": "order", "label": "Place Order", "status": "planned", "flows": [] },
+    {
+      "id": "order",
+      "label": "Place Order",
+      "status": "documented",
+      "data": "./data/order-management.json",
+      "flows": ["ORD-F01", "ORD-F02", "ORD-F03", "ORD-F04", "ORD-F05", "ORD-F06", "ORD-F07", "ORD-F08"]
+    },
     { "id": "bulktopup", "label": "Bulk Topup", "status": "planned", "flows": [] },
     {
       "id": "users",
       "label": "Users",
       "status": "documented",
+      "data": "./data/users.json",
       "flows": ["USR-F01", "USR-F02", "USR-F03", "USR-F04", "USR-F05", "USR-F06", "USR-F07", "USR-F08", "USR-F09"]
     },
     { "id": "devices", "label": "Devices", "status": "planned", "flows": [] },

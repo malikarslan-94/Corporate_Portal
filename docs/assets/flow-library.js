@@ -10,6 +10,8 @@
     moduleSummary: document.querySelector("#module-summary-text"),
     flowCount: document.querySelector("#flow-count"),
     documentVersion: document.querySelector("#document-version"),
+    referenceLink: document.querySelector("#reference-link"),
+    mapTitle: document.querySelector("#map-title"),
     legend: document.querySelector("#flow-legend"),
     flowCanvas: document.querySelector("#flow-canvas"),
     flowNodes: document.querySelector("#flow-nodes"),
@@ -31,7 +33,8 @@
 
   const state = {
     modules: [],
-    userData: null,
+    moduleData: new Map(),
+    activeModuleId: null,
     flows: new Map(),
     selectedFlowId: null,
     lastFocusedElement: null,
@@ -53,6 +56,8 @@
     outcome: "#16a34a",
     gap: "#dc2626"
   };
+
+  const activeData = () => state.moduleData.get(state.activeModuleId);
 
   const escapeHtml = (value = "") => String(value)
     .replaceAll("&", "&amp;")
@@ -79,24 +84,24 @@
   };
 
   const renderModuleNavigation = () => {
-    const userFlows = state.userData.flows;
-
     elements.moduleNav.innerHTML = state.modules.map((module) => {
-      const documented = module.id === "users";
+      const data = state.moduleData.get(module.id);
+      const documented = Boolean(data);
+      const active = module.id === state.activeModuleId;
       const dropdown = documented
         ? `
-          <p class="dropdown-label">User Management flows</p>
-          <button class="dropdown-item is-active" type="button" data-module-overview="users">Overview diagram</button>
-          ${userFlows.map((flow) => `<button class="dropdown-item" type="button" data-flow-id="${escapeHtml(flow.id)}"><strong>${escapeHtml(flow.id)}</strong> · ${escapeHtml(flow.shortTitle)}</button>`).join("")}
+          <p class="dropdown-label">${escapeHtml(data.module.title)} flows</p>
+          <button class="dropdown-item${active && !state.selectedFlowId ? " is-active" : ""}" type="button" data-module-overview="${escapeHtml(module.id)}">Overview diagram</button>
+          ${data.flows.map((flow) => `<button class="dropdown-item${active && state.selectedFlowId === flow.id ? " is-active" : ""}" type="button" data-module-id="${escapeHtml(module.id)}" data-flow-id="${escapeHtml(flow.id)}"><strong>${escapeHtml(flow.id)}</strong> · ${escapeHtml(flow.shortTitle)}</button>`).join("")}
         `
         : `
           <p class="dropdown-label">${escapeHtml(module.label)} flows</p>
-          <p class="dropdown-empty"><strong>Documentation planned</strong><span>This module will be added after User Management is approved.</span></p>
+          <p class="dropdown-empty"><strong>Documentation planned</strong><span>This module will be added in a future documentation pass.</span></p>
         `;
 
       return `
-        <div class="module-menu${documented ? " is-active" : ""}" data-module-id="${escapeHtml(module.id)}">
-          <button class="module-trigger${documented ? " is-active" : ""}" type="button" aria-expanded="false">${escapeHtml(module.label)}</button>
+        <div class="module-menu${active ? " is-active" : ""}" data-module-id="${escapeHtml(module.id)}">
+          <button class="module-trigger${active ? " is-active" : ""}" type="button" aria-expanded="false">${escapeHtml(module.label)}</button>
           <div class="module-menu__dropdown">${dropdown}</div>
         </div>
       `;
@@ -134,36 +139,27 @@
         }
       });
     });
-
-    elements.moduleNav.addEventListener("click", (event) => {
-      const flowButton = event.target.closest("[data-flow-id]");
-      if (flowButton) {
-        openFlow(flowButton.dataset.flowId);
-        return;
-      }
-
-      if (event.target.closest("[data-module-overview='users']")) {
-        closeDrawer(true);
-        setSelectedFlow(null);
-        closeAllMenus();
-        history.replaceState(null, "", "#users");
-        elements.flowCanvas.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    });
   };
 
   const renderSummary = () => {
-    const module = state.userData.module;
+    const data = activeData();
+    const module = data.module;
     elements.moduleTitle.textContent = module.title;
     elements.moduleRoute.textContent = module.route;
     elements.moduleSummary.textContent = module.summary;
-    elements.flowCount.textContent = state.userData.flows.length;
+    elements.flowCount.textContent = data.flows.length;
     elements.documentVersion.textContent = `v${module.version}`;
-    elements.headerStatus.textContent = `${state.userData.flows.length} User flows · ${module.documentId} v${module.version}`;
+    elements.headerStatus.textContent = `${data.flows.length} ${module.label} flows · ${module.documentId} v${module.version}`;
+    elements.mapTitle.textContent = module.mapTitle || `${module.title} journey`;
+    elements.flowCanvas.setAttribute("aria-label", `${module.title} flow diagram`);
+
+    const referenceUrl = module.referenceUrl || (module.id === "users" ? "./archive/user-management-prfs-v0.2.html" : "");
+    elements.referenceLink.hidden = !referenceUrl;
+    if (referenceUrl) elements.referenceLink.href = referenceUrl;
   };
 
   const renderLegend = () => {
-    elements.legend.innerHTML = state.userData.legend.map((item) => `
+    elements.legend.innerHTML = activeData().legend.map((item) => `
       <span class="legend__item">
         <span class="legend__swatch" style="--swatch:${swatches[item.type] || "#64748b"}" aria-hidden="true"></span>
         ${escapeHtml(item.label)}
@@ -172,18 +168,14 @@
   };
 
   const renderFlowPicker = () => {
-    elements.flowPickerMenu.innerHTML = state.userData.flows.map((flow) => `
-      <button class="dropdown-item" type="button" data-flow-id="${escapeHtml(flow.id)}"><strong>${escapeHtml(flow.id)}</strong> · ${escapeHtml(flow.shortTitle)}</button>
+    elements.flowPickerMenu.innerHTML = activeData().flows.map((flow) => `
+      <button class="dropdown-item" type="button" data-module-id="${escapeHtml(state.activeModuleId)}" data-flow-id="${escapeHtml(flow.id)}"><strong>${escapeHtml(flow.id)}</strong> · ${escapeHtml(flow.shortTitle)}</button>
     `).join("");
-
-    elements.flowPickerMenu.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-flow-id]");
-      if (button) openFlow(button.dataset.flowId);
-    });
   };
 
   const renderMap = () => {
-    const nodes = state.userData.map.nodes;
+    const data = activeData();
+    const nodes = data.map.nodes;
 
     elements.flowNodes.innerHTML = nodes.map((node) => {
       const flow = node.flowId ? state.flows.get(node.flowId) : null;
@@ -193,7 +185,7 @@
         ? `${flow.steps.length} steps · ${flow.apis.length} API${flow.apis.length === 1 ? "" : "s"} · ${flow.gaps.length} gap${flow.gaps.length === 1 ? "" : "s"}`
         : node.subtitle;
       const tag = flow ? "button" : "div";
-      const buttonAttributes = flow ? `type="button" data-flow-id="${escapeHtml(flow.id)}" aria-label="Open ${escapeHtml(flow.id)} ${escapeHtml(flow.title)}"` : "";
+      const buttonAttributes = flow ? `type="button" data-module-id="${escapeHtml(state.activeModuleId)}" data-flow-id="${escapeHtml(flow.id)}" aria-label="Open ${escapeHtml(flow.id)} ${escapeHtml(flow.title)}"` : "";
 
       return `
         <${tag} class="flow-node flow-node--${escapeHtml(node.type)}" data-node-key="${escapeHtml(node.key)}" ${buttonAttributes} style="--x:${node.x};--y:${node.y}">
@@ -204,17 +196,13 @@
       `;
     }).join("");
 
-    elements.flowNodes.addEventListener("click", (event) => {
-      const node = event.target.closest("[data-flow-id]");
-      if (node) openFlow(node.dataset.flowId);
-    });
-
     elements.canvasLoading.hidden = true;
     requestAnimationFrame(drawEdges);
   };
 
   const drawEdges = () => {
-    if (!state.userData || window.matchMedia("(max-width: 820px)").matches) {
+    const data = activeData();
+    if (!data || window.matchMedia("(max-width: 820px)").matches) {
       elements.flowEdges.innerHTML = "";
       return;
     }
@@ -232,7 +220,7 @@
       </defs>
     `;
 
-    const edgeMarkup = state.userData.map.edges.map((edge) => {
+    const edgeMarkup = data.map.edges.map((edge) => {
       const fromElement = elements.flowNodes.querySelector(`[data-node-key="${edge.from}"]`);
       const toElement = elements.flowNodes.querySelector(`[data-node-key="${edge.to}"]`);
       if (!fromElement || !toElement) return "";
@@ -275,7 +263,8 @@
   const setSelectedFlow = (flowId) => {
     state.selectedFlowId = flowId;
     document.querySelectorAll("[data-flow-id]").forEach((element) => {
-      const selected = element.dataset.flowId === flowId;
+      const sameModule = !element.dataset.moduleId || element.dataset.moduleId === state.activeModuleId;
+      const selected = sameModule && element.dataset.flowId === flowId;
       element.classList.toggle("is-selected", selected && element.classList.contains("flow-node"));
       element.classList.toggle("is-active", selected && element.classList.contains("dropdown-item"));
       if (element.classList.contains("flow-node")) element.setAttribute("aria-pressed", String(selected));
@@ -384,7 +373,48 @@
     });
   };
 
+  const closeDrawer = (restoreFocus = true, updateUrl = false) => {
+    if (elements.drawer.getAttribute("aria-hidden") === "true") return;
+    elements.drawer.classList.remove("is-open");
+    elements.drawer.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("drawer-open");
+
+    window.setTimeout(() => {
+      if (elements.drawer.getAttribute("aria-hidden") === "true") {
+        elements.drawer.hidden = true;
+        elements.drawerBackdrop.hidden = true;
+      }
+    }, 220);
+
+    if (updateUrl && state.activeModuleId) history.replaceState(null, "", `#${state.activeModuleId}`);
+    if (restoreFocus && state.lastFocusedElement instanceof HTMLElement) state.lastFocusedElement.focus();
+  };
+
+  const activateModule = (moduleId, options = {}) => {
+    const data = state.moduleData.get(moduleId);
+    if (!data) return false;
+
+    closeDrawer(false, false);
+    state.activeModuleId = moduleId;
+    state.flows = new Map(data.flows.map((flow) => [flow.id, flow]));
+    state.selectedFlowId = null;
+
+    renderModuleNavigation();
+    renderSummary();
+    renderLegend();
+    renderFlowPicker();
+    renderMap();
+    closeAllMenus();
+
+    if (options.updateUrl !== false) history.replaceState(null, "", `#${moduleId}`);
+    if (options.scroll) elements.flowCanvas.scrollIntoView({ behavior: "smooth", block: "center" });
+    return true;
+  };
+
   const openFlow = (flowId, options = {}) => {
+    const requestedModuleId = options.moduleId || state.activeModuleId;
+    if (requestedModuleId !== state.activeModuleId && !activateModule(requestedModuleId, { updateUrl: false })) return;
+
     const flow = state.flows.get(flowId);
     if (!flow) return;
 
@@ -406,28 +436,27 @@
     document.body.classList.add("drawer-open");
     requestAnimationFrame(() => elements.drawer.classList.add("is-open"));
 
-    if (options.updateUrl !== false) history.replaceState(null, "", `#users/${flow.id}`);
+    if (options.updateUrl !== false) history.replaceState(null, "", `#${state.activeModuleId}/${flow.id}`);
     if (options.focus !== false) window.setTimeout(() => elements.drawerClose.focus(), 230);
   };
 
-  const closeDrawer = (restoreFocus = true, updateUrl = false) => {
-    if (elements.drawer.getAttribute("aria-hidden") === "true") return;
-    elements.drawer.classList.remove("is-open");
-    elements.drawer.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("drawer-open");
-
-    window.setTimeout(() => {
-      elements.drawer.hidden = true;
-      elements.drawerBackdrop.hidden = true;
-    }, 220);
-
-    if (updateUrl) history.replaceState(null, "", "#users");
-    if (restoreFocus && state.lastFocusedElement instanceof HTMLElement) state.lastFocusedElement.focus();
+  const selectionFromHash = () => {
+    const parts = location.hash.slice(1).split("/").filter(Boolean);
+    return { moduleId: parts[0] || null, flowId: parts[1] || null };
   };
 
-  const flowFromHash = () => {
-    const parts = location.hash.slice(1).split("/").filter(Boolean);
-    return parts[0] === "users" && parts[1] ? parts[1] : null;
+  const applyHashSelection = () => {
+    const requested = selectionFromHash();
+    const fallbackModuleId = state.moduleData.has("users") ? "users" : state.moduleData.keys().next().value;
+    const moduleId = state.moduleData.has(requested.moduleId) ? requested.moduleId : fallbackModuleId;
+
+    if (moduleId !== state.activeModuleId) activateModule(moduleId, { updateUrl: false });
+    if (requested.flowId && state.flows.has(requested.flowId)) {
+      openFlow(requested.flowId, { moduleId, updateUrl: false, focus: false, preserveFocus: true });
+    } else {
+      closeDrawer(false, false);
+      setSelectedFlow(null);
+    }
   };
 
   const bindStaticEvents = () => {
@@ -437,12 +466,33 @@
       if (!expanded) closeAllMenus();
     });
 
+    elements.moduleNav.addEventListener("click", (event) => {
+      const flowButton = event.target.closest("[data-flow-id]");
+      if (flowButton) {
+        openFlow(flowButton.dataset.flowId, { moduleId: flowButton.dataset.moduleId });
+        return;
+      }
+
+      const overviewButton = event.target.closest("[data-module-overview]");
+      if (overviewButton) activateModule(overviewButton.dataset.moduleOverview, { scroll: true });
+    });
+
+    elements.flowNodes.addEventListener("click", (event) => {
+      const node = event.target.closest("[data-flow-id]");
+      if (node) openFlow(node.dataset.flowId, { moduleId: node.dataset.moduleId });
+    });
+
     elements.flowPicker.addEventListener("click", (event) => {
       event.stopPropagation();
       const expanded = elements.flowPicker.getAttribute("aria-expanded") === "true";
       closeAllMenus();
       elements.flowPicker.setAttribute("aria-expanded", String(!expanded));
       elements.flowPickerMenu.hidden = expanded;
+    });
+
+    elements.flowPickerMenu.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-flow-id]");
+      if (button) openFlow(button.dataset.flowId, { moduleId: button.dataset.moduleId });
     });
 
     elements.drawerClose.addEventListener("click", () => {
@@ -473,14 +523,7 @@
       }
     });
 
-    window.addEventListener("hashchange", () => {
-      const flowId = flowFromHash();
-      if (flowId && state.flows.has(flowId)) openFlow(flowId, { updateUrl: false, focus: false, preserveFocus: true });
-      else {
-        closeDrawer(false, false);
-        setSelectedFlow(null);
-      }
-    });
+    window.addEventListener("hashchange", applyHashSelection);
 
     let resizeFrame;
     window.addEventListener("resize", () => {
@@ -489,36 +532,26 @@
     });
   };
 
-  const loadLibrary = async () => {
+  async function loadLibrary() {
     elements.loadError.hidden = true;
     elements.canvasLoading.hidden = false;
     elements.headerStatus.textContent = "Loading flow library";
 
     try {
-      const [moduleData, userData] = await Promise.all([
-        fetchJson("./data/modules.json"),
-        fetchJson("./data/users.json")
-      ]);
+      const moduleIndex = await fetchJson("./data/modules.json");
+      const documentedModules = moduleIndex.modules.filter((module) => module.status === "documented" && module.data);
+      const datasets = await Promise.all(documentedModules.map((module) => fetchJson(module.data)));
 
-      state.modules = moduleData.modules;
-      state.userData = userData;
-      state.flows = new Map(userData.flows.map((flow) => [flow.id, flow]));
-
-      renderModuleNavigation();
-      renderSummary();
-      renderLegend();
-      renderFlowPicker();
-      renderMap();
-
-      const requestedFlow = flowFromHash();
-      if (requestedFlow && state.flows.has(requestedFlow)) openFlow(requestedFlow, { updateUrl: false, focus: false });
+      state.modules = moduleIndex.modules;
+      state.moduleData = new Map(datasets.map((data) => [data.module.id, data]));
+      applyHashSelection();
     } catch (error) {
       console.error("Flow library failed to load", error);
       elements.canvasLoading.hidden = true;
       elements.loadError.hidden = false;
       elements.headerStatus.textContent = "Flow data unavailable";
     }
-  };
+  }
 
   bindStaticEvents();
   loadLibrary();
