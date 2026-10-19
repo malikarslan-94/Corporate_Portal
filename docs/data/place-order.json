@@ -1,0 +1,577 @@
+{
+  "module": {
+    "id": "order",
+    "label": "Place Order",
+    "title": "Place Order",
+    "mapTitle": "Place Order lifecycle",
+    "documentId": "PRFS-PO-001",
+    "version": "0.1",
+    "status": "Draft from current implementation",
+    "route": "/admin/placeorder",
+    "updated": "2026-10-19",
+    "summary": "Place an internet package order for a selected corporate customer, from customer context and plan search through service configuration, fulfilment, payment and final order result."
+  },
+  "legend": [
+    { "type": "user", "label": "Operator action" },
+    { "type": "system", "label": "System/API operation" },
+    { "type": "decision", "label": "Decision or branch" },
+    { "type": "outcome", "label": "Result or ready state" },
+    { "type": "gap", "label": "Known risk or gap" }
+  ],
+  "map": {
+    "nodes": [
+      { "key": "f01", "flowId": "PO-F01", "type": "user", "x": 10, "y": 12 },
+      { "key": "f02", "flowId": "PO-F02", "type": "system", "x": 36, "y": 12 },
+      { "key": "f03", "flowId": "PO-F03", "type": "user", "x": 63, "y": 12 },
+      { "key": "f04", "flowId": "PO-F04", "type": "system", "x": 90, "y": 12 },
+      { "key": "fulfilment", "title": "Physical device fulfilment?", "subtitle": "Branch by product, service and selected device", "type": "decision", "x": 72, "y": 39 },
+      { "key": "f05", "flowId": "PO-F05", "type": "user", "x": 45, "y": 57 },
+      { "key": "f06", "flowId": "PO-F06", "type": "user", "x": 18, "y": 78 },
+      { "key": "f07", "flowId": "PO-F07", "type": "user", "x": 72, "y": 78 },
+      { "key": "f08", "flowId": "PO-F08", "type": "outcome", "x": 90, "y": 90 }
+    ],
+    "edges": [
+      { "from": "f01", "to": "f02", "label": "customer ready" },
+      { "from": "f02", "to": "f03", "label": "plan selected" },
+      { "from": "f03", "to": "f04", "label": "configuration valid" },
+      { "from": "f04", "to": "fulfilment", "label": "charges ready" },
+      { "from": "fulfilment", "to": "f05", "label": "Pocket WiFi purchase/rental" },
+      { "from": "fulfilment", "to": "f07", "label": "SIM, eSIM, top-up or assigned device" },
+      { "from": "f05", "to": "f06", "label": "self pickup" },
+      { "from": "f05", "to": "f07", "label": "delivery address" },
+      { "from": "f06", "to": "f07", "label": "location selected" },
+      { "from": "f07", "to": "f08", "label": "confirm order" }
+    ]
+  },
+  "flows": [
+    {
+      "id": "PO-F01",
+      "title": "Start order and establish customer context",
+      "shortTitle": "Start & select customer",
+      "status": "as-is",
+      "evidence": "AS-IS traced in active Place Order implementation",
+      "actor": "Authenticated Corporate Portal Operator",
+      "trigger": "Select Place Order, open /admin/placeorder, or arrive from Support with a customer prefill.",
+      "summary": "Restore or select the customer and source that every later plan, device, charge and payment request must use.",
+      "preconditions": [
+        "The operator is authenticated and has access to Place Order.",
+        "The active login contains a source and corporate operator identity.",
+        "A support-assisted entry may have written cs_placeorder_prefill to sessionStorage."
+      ],
+      "outcome": "A verified userProfile, userId and source are stored in the working order and an end-user token is requested.",
+      "steps": [
+        { "type": "system", "title": "Initialize order state", "detail": "Prefer Support prefill, otherwise restore po_order_state, otherwise use the logged-in customer context when available." },
+        { "type": "user", "title": "Choose source and customer", "detail": "The operator types at least three valid characters or selects a returned customer." },
+        { "type": "system", "title": "Search scoped users", "detail": "Debounce for 500 ms and request matching Jane users with source, group_id and corp_id." },
+        { "type": "decision", "title": "Exact customer found?", "detail": "Only an exact normalized userId match becomes the active userProfile." },
+        { "type": "system", "title": "Persist safe context", "detail": "Write source, user profile, user ID, device type, travel details and promo code to po_order_state." },
+        { "type": "outcome", "title": "Enable package search", "detail": "The customer is ready and the end-user token lookup runs for the selected source." }
+      ],
+      "branches": [
+        { "label": "Support prefill", "tone": "success", "detail": "Use cs_placeorder_prefill and mirror its customer context into po_order_state." },
+        { "label": "Saved order context", "tone": "neutral", "detail": "Restore the persisted subset when no newer support prefill exists." },
+        { "label": "No exact user", "tone": "danger", "detail": "Keep package search disabled and show that the user profile does not exist." },
+        { "label": "Source changes", "tone": "warning", "detail": "Clear customer, travel, promo and deposit data to prevent cross-source ordering." }
+      ],
+      "apis": [
+        {
+          "name": "getAllJaneUsers",
+          "method": "POST",
+          "path": "/jane/v2/getAllJaneUsers",
+          "purpose": "Find customers within the operator's source and corporate scope.",
+          "request": { "source": "urwifi", "search": "traveller@example.com", "group_id": 7, "corp_id": "corporate@example.com" },
+          "successResponse": { "users": [{ "userId": "traveller@example.com", "appUserId": "10442", "origin": "SG", "source": "urwifi" }] },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to find users" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR01", "text": "Every order must be bound to one verified customer and one approved source before package selection." },
+        { "id": "PO-BR02", "text": "Changing source invalidates previously selected customer, travel and promotional context." },
+        { "id": "PO-BR03", "text": "Support prefill must never bypass the same customer and authorization checks used by direct entry." }
+      ],
+      "gaps": [
+        { "id": "PO-G01", "severity": "high", "text": "cs_placeorder_prefill is read but not removed in the active Rent flow, so stale support context can be replayed on a later visit." },
+        { "id": "PO-G02", "severity": "high", "text": "The component performs a client-side login redirect, but route-level authorization and backend Place Order permission enforcement are not demonstrated here." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC01", "text": "An unauthenticated or unauthorized operator cannot open the route or retrieve customer data." },
+        { "id": "PO-AC02", "text": "Package search stays disabled until an exact customer profile is selected." },
+        { "id": "PO-AC03", "text": "Changing source clears all customer-specific order state." },
+        { "id": "PO-AC04", "text": "A consumed support prefill is cleared or explicitly marked consumed." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/PlaceOrder.jsx",
+        "src/containers/Order/create/rent/Rent.jsx",
+        "src/containers/Order/create/rent/steps/OrderInfo.jsx",
+        "src/services/endUserToken.js"
+      ]
+    },
+    {
+      "id": "PO-F02",
+      "title": "Search and select an internet package",
+      "shortTitle": "Search & select plan",
+      "status": "as-is",
+      "evidence": "AS-IS traced in InternetPackages",
+      "actor": "Corporate Portal Operator",
+      "trigger": "A customer is selected and the operator chooses destination, dates, product type and optional promo code.",
+      "summary": "Load eligible partner or local plans for the customer and destination, validate promotions, filter the result and select one package.",
+      "preconditions": [
+        "A verified customer profile and source exist.",
+        "A travel country is selected.",
+        "The plan search is not already running."
+      ],
+      "outcome": "The selected package is stored in order.package and navigation continues to Cart Service.",
+      "steps": [
+        { "type": "user", "title": "Enter trip criteria", "detail": "Choose destination, optional date range for SIM/eSIM, required dates for Pocket WiFi, product type and optional promo code." },
+        { "type": "decision", "title": "Partner plan group?", "detail": "Eligible partner groups load partner plans; other operators use local plans scoped by user, destination and source." },
+        { "type": "decision", "title": "Promo supplied?", "detail": "Load promo details and, for non-global promos, validate the selected country before plan search." },
+        { "type": "system", "title": "Load eligible plans", "detail": "Request plans with origin, destination, customer, source and partner context." },
+        { "type": "user", "title": "Filter plans", "detail": "Filter by Pocket WiFi, SIM or eSIM, plan category, plan name or code, and load more results." },
+        { "type": "user", "title": "Select package", "detail": "Store the package; the Rent effect navigates to /admin/placeorder/pocketwificartservice." }
+      ],
+      "branches": [
+        { "label": "Global promo", "tone": "success", "detail": "Proceed directly to the plan search using the promo code." },
+        { "label": "Country-restricted promo", "tone": "warning", "detail": "Continue only when validatePromoCountry marks the selected country eligible." },
+        { "label": "No plans", "tone": "neutral", "detail": "Show a distinct no-packages result and allow the operator to change criteria." },
+        { "label": "API failure", "tone": "danger", "detail": "Stop the loading state and surface the returned error message." }
+      ],
+      "apis": [
+        {
+          "name": "localPlans",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Load destination-eligible plans for the selected customer.",
+          "request": { "requestType": "localPlans", "travelingTo": ["JP"], "origin": "SG", "promoCode": "TRAVEL10", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi", "partnerId": "corporate@example.com", "platform": "crm" },
+          "successResponse": { "status": { "result": true }, "deposit": 100, "plans": [{ "planCode": "PW-JP-10", "planName": "Japan Pocket WiFi", "deviceType": "D", "currency": "SGD" }] },
+          "errorResponse": { "status": { "result": false }, "message": "No eligible plans found" }
+        },
+        {
+          "name": "validatePromoCountry",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Validate a non-global promo against the selected destination.",
+          "request": { "requestType": "validatePromoCountry", "countryList": [{ "countryCode": "JP" }], "promoCode": "TRAVEL10", "source": "urwifi" },
+          "successResponse": { "status": { "result": true }, "countryList": [{ "countryCode": "JP", "promo": "TRUE" }] },
+          "errorResponse": { "status": { "result": false }, "message": "Promo is not valid for this country" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR04", "text": "Plan eligibility must use the selected customer's identity, origin, destination, source and approved partner scope." },
+        { "id": "PO-BR05", "text": "A country-restricted promo cannot affect charges until the destination validation succeeds." },
+        { "id": "PO-BR06", "text": "Pocket WiFi requires valid travel dates before service configuration can complete; SIM/eSIM dates may be optional at search time." }
+      ],
+      "gaps": [
+        { "id": "PO-G03", "severity": "medium", "text": "Initial priority-plan loading can show plans before destination criteria are submitted; the eligibility contract between priority plans and later local-plan search should be explicit." },
+        { "id": "PO-G04", "severity": "medium", "text": "A hard-coded operator exception for aziz@dealer.com changes partner scoping and should be replaced with a documented policy or permission." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC05", "text": "Search cannot run without a verified customer and destination." },
+        { "id": "PO-AC06", "text": "Only plans eligible for the chosen customer, source and destination are selectable." },
+        { "id": "PO-AC07", "text": "An invalid promo cannot be applied or carried into pricing." },
+        { "id": "PO-AC08", "text": "Selecting a package moves exactly once to Cart Service with the chosen plan preserved." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/InternetPackages.jsx",
+        "src/services/general.services.js",
+        "src/containers/Order/create/rent/InternetPackageCard.jsx"
+      ]
+    },
+    {
+      "id": "PO-F03",
+      "title": "Configure service, variation and device",
+      "shortTitle": "Configure cart service",
+      "status": "as-is",
+      "evidence": "AS-IS traced in PocketWifiCartService",
+      "actor": "Corporate Portal Operator",
+      "trigger": "Select an internet package.",
+      "summary": "Load plan variations and customer devices, then choose service type, data size, duration, dates, quantity and an existing device when the flow requires one.",
+      "preconditions": [
+        "A package with planCode and product type is stored in the Redux cart.",
+        "The selected customer and source are still available.",
+        "Travel details exist when the product requires them."
+      ],
+      "outcome": "A valid variation and optional selectedDevice are stored in orderData and the operator can continue to Plan Summary.",
+      "steps": [
+        { "type": "system", "title": "Load variations", "detail": "Request getPlanVariations using planCode and product type for Pocket WiFi." },
+        { "type": "system", "title": "Load customer devices", "detail": "Request devices using userId, appUserId and source." },
+        { "type": "system", "title": "Group service choices", "detail": "Normalize variations into rent, buy, top-up, SIM and eSIM service groups with data sizes and durations." },
+        { "type": "user", "title": "Choose service configuration", "detail": "Select service type, data size, duration, quantity and travel dates as required." },
+        { "type": "decision", "title": "Existing device required?", "detail": "Top-up requires a compatible customer device; lookup by device ID also warns when ownership differs." },
+        { "type": "system", "title": "Store cart configuration", "detail": "Write variation and selectedDevice into the shared order object and enable Next only when required data is complete." }
+      ],
+      "branches": [
+        { "label": "SIM/eSIM purchase", "tone": "neutral", "detail": "A selected variation is sufficient; travel details are normalized to today's date after selection." },
+        { "label": "Top-up", "tone": "warning", "detail": "Require a compatible device and an available top-up variation." },
+        { "label": "Different owner", "tone": "warning", "detail": "Allow continuation but generate a new order_id and show a device-ownership warning." },
+        { "label": "No services", "tone": "danger", "detail": "Show the no-services state and keep Next disabled." }
+      ],
+      "apis": [
+        {
+          "name": "getPlanVariations",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Load service variations for the selected plan.",
+          "request": { "requestType": "getPlanVariations", "planCode": "PW-JP-10", "productType": "D" },
+          "successResponse": { "status": { "result": true }, "plan": [{ "variationId": "711", "packageCode": "PW-JP-10-5GB", "productType": "D", "serviceType": "R", "dataSize": 5, "days": 10, "desc": "GB" }] },
+          "errorResponse": { "status": { "result": false }, "message": "No service variations available" }
+        },
+        {
+          "name": "getDevices",
+          "method": "POST",
+          "path": "/jane2/api/getdevices",
+          "purpose": "Load devices belonging to the selected customer for top-up or plan assignment.",
+          "request": { "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
+          "successResponse": { "devices": [{ "device_id": "PW12345678", "device_type": "D", "provider": "Yoowifi" }] },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to load devices" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR07", "text": "The selected variation must belong to the selected plan and match the intended product and service type." },
+        { "id": "PO-BR08", "text": "Top-up requires a compatible device and available variation for that device type and provider." },
+        { "id": "PO-BR09", "text": "Pocket WiFi Next remains disabled until every travel leg has location and required dates." }
+      ],
+      "gaps": [
+        { "id": "PO-G05", "severity": "high", "text": "A device that belongs to another user is allowed to proceed after only a warning; the approved ownership and reassignment policy is not defined." },
+        { "id": "PO-G06", "severity": "high", "text": "Directly refreshing a later route can leave Redux orderData incomplete because the persisted po_order_state excludes package, variation, selected device, delivery and payment data." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC09", "text": "Next remains disabled until the selected service has a valid variation and all product-specific requirements." },
+        { "id": "PO-AC10", "text": "Top-up cannot continue with an incompatible or unavailable device variation." },
+        { "id": "PO-AC11", "text": "A later-step refresh recovers the complete order safely or returns the operator to the earliest valid step." },
+        { "id": "PO-AC12", "text": "Cross-user device use follows an explicit authorization rule and creates an auditable event." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/PocketWifiCartService.jsx",
+        "src/hooks/useAddPlan.jsx",
+        "src/services/general.services.js"
+      ]
+    },
+    {
+      "id": "PO-F04",
+      "title": "Resolve payment gateway and calculate charges",
+      "shortTitle": "Review plan & charges",
+      "status": "as-is",
+      "evidence": "AS-IS traced in PocketWifiPlanSummery",
+      "actor": "Corporate Portal Operator",
+      "trigger": "Continue from Cart Service with a valid variation.",
+      "summary": "Resolve the customer's payment gateway, calculate either purchase-order or selected-device plan charges, and show the authoritative total before fulfilment.",
+      "preconditions": [
+        "The order contains customer, package, variation and travel details.",
+        "A selectedDevice is present only for a plan/top-up flow.",
+        "The backend can resolve a payment gateway for the customer."
+      ],
+      "outcome": "pgwType, amount and any discount are stored; the flow branches to fulfilment or directly to Order Summary.",
+      "steps": [
+        { "type": "system", "title": "Resolve gateway", "detail": "Request the customer's payment gateway using encrypted userId and appUserId data." },
+        { "type": "decision", "title": "Selected device present?", "detail": "Use plan charges for an assigned device; otherwise use order charges for a new purchase or rental." },
+        { "type": "system", "title": "Calculate charges", "detail": "Send plan, package, variation, travel, promo, source and customer fields to the appropriate charge endpoint." },
+        { "type": "system", "title": "Store pricing", "detail": "Persist authoritative charges and discount in orderData." },
+        { "type": "user", "title": "Review summary", "detail": "Check product type, data, duration, device or quantity, promo and total." },
+        { "type": "decision", "title": "Fulfilment required?", "detail": "New Pocket WiFi without a selected device goes to Shipping Option; other products and assigned-device flows go to Order Summary." }
+      ],
+      "branches": [
+        { "label": "Assigned device", "tone": "neutral", "detail": "POST plan/charges and bypass physical fulfilment." },
+        { "label": "New Pocket WiFi", "tone": "warning", "detail": "POST order/charges, then select fulfilment unless default pickup is explicitly chosen." },
+        { "label": "Skip shipping", "tone": "neutral", "detail": "Set the fixed Emerald Hill office as self pickup with zero shipping charge and continue to Order Summary." },
+        { "label": "Pricing failure", "tone": "danger", "detail": "Show an error state and do not allow confirmation with an unknown total." }
+      ],
+      "apis": [
+        {
+          "name": "getPaymentGateway",
+          "method": "POST",
+          "path": "/payment-services/payments/get-pgw",
+          "purpose": "Resolve the payment gateway configured for the selected customer.",
+          "request": { "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi", "data": "<encrypted userId and appUserId>" },
+          "successResponse": { "data": { "pgw": "2c2p" } },
+          "errorResponse": { "status": { "result": false }, "message": "Payment gateway unavailable" }
+        },
+        {
+          "name": "calculateOrderCharges",
+          "method": "POST",
+          "path": "/yw-services/api/order/charges",
+          "purpose": "Calculate charges when no existing device is selected.",
+          "request": { "orderType": "rent", "promoCode": "TRAVEL10", "quantity": 1, "startDate": "2026-11-05", "endDate": "2026-11-14", "planCode": "PW-JP-10", "packageCode": "PW-JP-10-5GB", "variationId": 711, "travelingTo": ["JP"], "pgw": "2c2p", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
+          "successResponse": { "charges": { "charges": 89.9, "discount": 10 } },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to calculate charges" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR10", "text": "The backend-calculated amount is authoritative; the browser must not calculate or override the payable total." },
+        { "id": "PO-BR11", "text": "The charge request and final order request must describe the same customer, plan, variation, quantity, travel details and promo." },
+        { "id": "PO-BR12", "text": "Physical fulfilment applies only where the selected product and service require delivery or pickup." }
+      ],
+      "gaps": [
+        { "id": "PO-G07", "severity": "medium", "text": "The charge hook does not list the complete order configuration in its callback dependencies, so changes beyond pgw or selectedDevice may not automatically trigger recalculation." },
+        { "id": "PO-G08", "severity": "medium", "text": "Skip Shipping applies one hard-coded office location; availability by customer origin, product and operating hours is not validated in this step." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC13", "text": "The plan summary never displays a confirmable total until the gateway and charge calls succeed." },
+        { "id": "PO-AC14", "text": "Any price-affecting change causes charges to be recalculated before confirmation." },
+        { "id": "PO-AC15", "text": "The fulfilment branch matches product type, service type and selected-device state." },
+        { "id": "PO-AC16", "text": "Default pickup is available only when the fixed location is valid for the order." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/PocketWifiPlanSummery.jsx",
+        "src/helpers/compute-service.js",
+        "src/services/apiClient.js"
+      ]
+    },
+    {
+      "id": "PO-F05",
+      "title": "Choose shipping or self pickup",
+      "shortTitle": "Choose fulfilment",
+      "status": "as-is",
+      "evidence": "AS-IS traced in PocketWifiShippingOption",
+      "actor": "Corporate Portal Operator",
+      "trigger": "A new physical Pocket WiFi order continues from Plan Summary.",
+      "summary": "Load available fulfilment methods, then route self pickup to location selection or store a delivery method and address for final review.",
+      "preconditions": [
+        "The order needs physical fulfilment.",
+        "The customer profile contains origin, userId and appUserId.",
+        "Plan charges have already been calculated."
+      ],
+      "outcome": "The order contains either delivery details or proceeds to the Self Pickup flow.",
+      "steps": [
+        { "type": "system", "title": "Load shipping rates", "detail": "Request available methods with customer country, userId, appUserId and source." },
+        { "type": "system", "title": "Normalize options", "detail": "Put self pickup first and exclude it for buy-device variations." },
+        { "type": "user", "title": "Select fulfilment", "detail": "Choose self pickup or an available paid/free shipping method." },
+        { "type": "decision", "title": "Self pickup?", "detail": "Navigate to pickup-location selection without requiring an address." },
+        { "type": "user", "title": "Select delivery address", "detail": "For non-self shipping, select a saved address before Next is enabled." },
+        { "type": "system", "title": "Store delivery", "detail": "Persist shipping type, address ID/data, currency and rate, then open Order Summary." }
+      ],
+      "branches": [
+        { "label": "Self pickup", "tone": "neutral", "detail": "Continue to PO-F06 and choose an active pickup location." },
+        { "label": "Delivery", "tone": "success", "detail": "Require an address and save the authoritative shipping rate." },
+        { "label": "Buy device", "tone": "warning", "detail": "Filter self pickup from the returned methods." },
+        { "label": "No methods", "tone": "danger", "detail": "Show the empty state and prevent progress." }
+      ],
+      "apis": [
+        {
+          "name": "getShippingRate",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Load fulfilment options and shipping rates for the customer origin.",
+          "request": { "requestType": "getShippingRate", "countryCode": "SG", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
+          "successResponse": { "shipping": [{ "type": "self", "rate": 0 }, { "type": "standard", "rate": 8.5 }], "currency": { "currencyCode": "SGD" } },
+          "errorResponse": { "status": { "result": false }, "message": "No shipping options available" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR13", "text": "Non-self fulfilment requires a valid address belonging to the selected customer." },
+        { "id": "PO-BR14", "text": "The shipping rate and currency stored on the order must match the selected backend option." },
+        { "id": "PO-BR15", "text": "Buy-device flows may not use self pickup under the current implementation rule." }
+      ],
+      "gaps": [
+        { "id": "PO-G09", "severity": "medium", "text": "The reason self pickup is excluded for buy-device flows is encoded in the UI but not expressed as an authoritative backend rule." },
+        { "id": "PO-G10", "severity": "medium", "text": "Shipping-rate failure is presented as an empty options state, so operators cannot distinguish unavailable fulfilment from a technical error." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC17", "text": "Only backend-returned fulfilment options can be selected." },
+        { "id": "PO-AC18", "text": "A delivery method cannot continue without a valid selected customer address." },
+        { "id": "PO-AC19", "text": "Self pickup never carries a delivery address or delivery charge." },
+        { "id": "PO-AC20", "text": "Technical rate failures are distinguishable from a valid no-options result and can be retried." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/PocketWifiShippingOption.jsx",
+        "src/containers/Order/create/rent/steps/DeliveryAddress.jsx",
+        "src/services/general.services.js"
+      ]
+    },
+    {
+      "id": "PO-F06",
+      "title": "Select a self-pickup location",
+      "shortTitle": "Select pickup location",
+      "status": "as-is",
+      "evidence": "AS-IS traced in PocketWifiSelfPickup",
+      "actor": "Corporate Portal Operator",
+      "trigger": "Choose self pickup from Shipping Option.",
+      "summary": "Load active pickup locations, filter them by country, select one location and store it as zero-delivery-charge fulfilment.",
+      "preconditions": [
+        "Self pickup is an allowed shipping option for the order.",
+        "The selected customer has userId and appUserId.",
+        "Pickup locations are available from the backend."
+      ],
+      "outcome": "delivery.shippingType is self and delivery.location contains the selected active pickup location.",
+      "steps": [
+        { "type": "system", "title": "Load all pickup locations", "detail": "Request locations with cityId 0, simEnabled false and the selected customer identifiers." },
+        { "type": "system", "title": "Filter active locations", "detail": "Keep locations whose active flag is 1 and derive a unique country list." },
+        { "type": "user", "title": "Choose country", "detail": "Select the pickup country; reload locations for that country." },
+        { "type": "user", "title": "Choose location", "detail": "Review address and operating details and choose one location." },
+        { "type": "decision", "title": "Both selections present?", "detail": "Block Next until country and location are selected." },
+        { "type": "system", "title": "Store pickup", "detail": "Save country, location and shippingType self, then navigate to Order Summary." }
+      ],
+      "branches": [
+        { "label": "Origin match", "tone": "neutral", "detail": "The implementation attempts to preselect a location matching the customer's origin." },
+        { "label": "Country changed", "tone": "neutral", "detail": "Clear the old location and request the new country's locations." },
+        { "label": "No active locations", "tone": "danger", "detail": "Keep Next disabled and explain that no pickup location is available." },
+        { "label": "Load failure", "tone": "danger", "detail": "Show an error and preserve the ability to go back to fulfilment selection." }
+      ],
+      "apis": [
+        {
+          "name": "getPickupLocations",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Load active pickup locations, optionally filtered by country.",
+          "request": { "requestType": "getPickupLocations", "source": "crm", "cityId": 0, "simEnabled": false, "countryCode": "SG", "userId": "traveller@example.com", "appUserId": "10442", "allLocations": true },
+          "successResponse": { "locations": [{ "locationCode": "SG-YOOWIFI-EMERALDHILL", "locationCountryCode": "SG", "locationCountry": "Singapore", "addressOne": "166, Emerald Hill Road", "active": "1" }] },
+          "errorResponse": { "status": { "result": false }, "message": "Failed to load pickup locations" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR16", "text": "Only active pickup locations returned for the selected country may be attached to the order." },
+        { "id": "PO-BR17", "text": "Self pickup has zero shipping charge unless the backend explicitly returns a pickup fee." },
+        { "id": "PO-BR18", "text": "Changing country invalidates the previously selected location." }
+      ],
+      "gaps": [
+        { "id": "PO-G11", "severity": "high", "text": "Initial origin matching sets selectedLocation but does not set selectedCountry, while form validation requires both; the apparent auto-selection cannot continue." },
+        { "id": "PO-G12", "severity": "medium", "text": "Pickup API failures use browser alert messages instead of an inline, retryable state." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC21", "text": "Origin auto-selection sets a consistent country and location pair." },
+        { "id": "PO-AC22", "text": "Changing country always clears a location from the previous country." },
+        { "id": "PO-AC23", "text": "Only an active location in the selected country can be saved." },
+        { "id": "PO-AC24", "text": "A failed location request shows an inline Retry action without losing the order." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/PocketWifiSelfPickup.jsx",
+        "src/services/general.services.js",
+        "src/services/host.services.js"
+      ]
+    },
+    {
+      "id": "PO-F07",
+      "title": "Review order and select payment",
+      "shortTitle": "Review & choose payment",
+      "status": "as-is",
+      "evidence": "AS-IS traced in PocketWifiOrderSummery",
+      "actor": "Corporate Portal Operator",
+      "trigger": "Arrive at Order Summary after pricing and any required fulfilment selection.",
+      "summary": "Review the full customer, plan, travel, device, fulfilment and total context, select an eligible payment card, and optionally suppress charges when permitted.",
+      "preconditions": [
+        "The order has authoritative charges and payment gateway type.",
+        "Required physical fulfilment data exists.",
+        "The selected customer identity remains unchanged."
+      ],
+      "outcome": "The operator has reviewed a coherent order and selected a payment path ready for submission.",
+      "steps": [
+        { "type": "system", "title": "Load payment cards", "detail": "Request encrypted customer cards and keep supported 2c2p and corporate-card entries." },
+        { "type": "system", "title": "Build review summary", "detail": "Show user, source, destination, dates, plan, variation, quantity/device, promo, fulfilment and total payable." },
+        { "type": "user", "title": "Select payment", "detail": "Choose a supported saved card or corporate card." },
+        { "type": "decision", "title": "Suppress charges allowed?", "detail": "The current userProfile supCharges value initializes an optional suppression path." },
+        { "type": "user", "title": "Confirm accuracy", "detail": "Review the final data before Place Order starts payment and submission." },
+        { "type": "outcome", "title": "Ready to submit", "detail": "paymentCard, total and order configuration are ready for PO-F08." }
+      ],
+      "branches": [
+        { "label": "2c2p card", "tone": "success", "detail": "Create a payment session before placing the order." },
+        { "label": "Corporate card", "tone": "neutral", "detail": "Use pgw crpc and the corporate-card invoice marker." },
+        { "label": "Suppress charges", "tone": "warning", "detail": "Skip payment session and place the order with supCharges true." },
+        { "label": "Adyen", "tone": "danger", "detail": "The page states that Adyen is currently unavailable for this service." }
+      ],
+      "apis": [
+        {
+          "name": "getUserCardsEnc",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Load encrypted saved payment methods for the selected customer.",
+          "request": { "requestType": "getUserCardsEnc", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
+          "successResponse": { "status": { "result": true }, "data": "<encrypted card array containing cardId and pgw>" },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to load payment cards" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR19", "text": "The final review must match the exact data that will be sent in the order request." },
+        { "id": "PO-BR20", "text": "Suppress Charges and corporate-card payment require explicit operator permission and an audit record." },
+        { "id": "PO-BR21", "text": "Only payment methods supported by the resolved gateway may be selected." }
+      ],
+      "gaps": [
+        { "id": "PO-G13", "severity": "critical", "text": "The UI exposes charge suppression based on userProfile.supCharges; server-side authorization for this financially sensitive action is not demonstrated in the reviewed flow." },
+        { "id": "PO-G14", "severity": "high", "text": "Adyen can be resolved as pgwType but the summary declares it unavailable, leaving affected customers without an in-flow recovery path." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC25", "text": "The displayed final summary and submission payload agree on all price- and fulfilment-affecting fields." },
+        { "id": "PO-AC26", "text": "Unsupported payment methods cannot be selected or submitted." },
+        { "id": "PO-AC27", "text": "Charge suppression is enforced by backend permission and recorded in the order audit trail." },
+        { "id": "PO-AC28", "text": "An unavailable gateway provides a clear alternative or stops before Place Order is enabled." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/PocketWifiOrderSummery.jsx",
+        "src/services/encryption.js",
+        "src/services/general.services.js"
+      ]
+    },
+    {
+      "id": "PO-F08",
+      "title": "Create payment session and place the order",
+      "shortTitle": "Submit order & result",
+      "status": "as-is",
+      "evidence": "AS-IS traced in PocketWifiOrderSummery",
+      "actor": "Corporate Portal Operator and Yoowifi order services",
+      "trigger": "Select Place Order from the reviewed Order Summary.",
+      "summary": "Create a payment session when required, submit the correct purchase or plan-order payload, then present one unambiguous success or failure result.",
+      "preconditions": [
+        "The final review is complete and payment path is valid.",
+        "The order amount and fulfilment data are current.",
+        "The operator has not already submitted this order."
+      ],
+      "outcome": "A successful response returns an order ID; a failure preserves the order for safe correction or retry.",
+      "steps": [
+        { "type": "user", "title": "Place order", "detail": "Open a blocking loading modal and prevent another submission." },
+        { "type": "decision", "title": "Payment session required?", "detail": "Corporate card and authorized charge suppression skip the external payment-session call." },
+        { "type": "system", "title": "Create payment session", "detail": "Encrypt customer, amount, card, currency and return URL; store the returned invoiceNo." },
+        { "type": "decision", "title": "Top-up service?", "detail": "Submit /order/plan for serviceType T; otherwise submit /order for purchase/rental." },
+        { "type": "system", "title": "Place authoritative order", "detail": "Send customer, plan, variation, dates, promo, payment, quantity/device and fulfilment fields." },
+        { "type": "outcome", "title": "Show final result", "detail": "Display success with orderId or an error message; closing success returns to Internet Packages." }
+      ],
+      "branches": [
+        { "label": "Payment session fails", "tone": "danger", "detail": "Show a payment initialization error and do not call the order endpoint." },
+        { "label": "Purchase or rental", "tone": "neutral", "detail": "POST /yw-services/api/order with fulfilment fields when applicable." },
+        { "label": "Top-up or assigned plan", "tone": "neutral", "detail": "POST /yw-services/api/order/plan with device and order identifiers." },
+        { "label": "Order succeeds", "tone": "success", "detail": "Show returned order ID, then return to the package step when the modal closes." },
+        { "label": "Order fails", "tone": "danger", "detail": "Keep the order available and show either the backend message or a network error." }
+      ],
+      "apis": [
+        {
+          "name": "createPaymentSession",
+          "method": "POST",
+          "path": "/payment-services/payments/process/payment-session",
+          "purpose": "Create the invoice/payment session required before a chargeable order.",
+          "request": { "appUserId": "10442", "userId": "traveller@example.com", "data": "<encrypted amount, cardId, returnUrl and currency>" },
+          "successResponse": { "data": { "invoiceNo": "INV-20261019-001" } },
+          "errorResponse": { "status": { "result": false }, "message": "Failed to initialize payment session" }
+        },
+        {
+          "name": "placeOrder",
+          "method": "POST",
+          "path": "/yw-services/api/order",
+          "purpose": "Create a new purchase or rental order.",
+          "request": { "orderType": "rent", "promoCode": "TRAVEL10", "cardId": 88, "quantity": 1, "startDate": "2026-11-05", "endDate": "2026-11-14", "planCode": "PW-JP-10", "packageCode": "PW-JP-10-5GB", "variationId": 711, "invoiceNo": "INV-20261019-001", "shippingType": "self", "locationCode": "SG-YOOWIFI-EMERALDHILL", "shippingCharges": 0, "travelDetails": [{ "countryCode": "JP", "startDate": "2026-11-05", "endDate": "2026-11-14" }], "supCharges": false, "pgw": "2c2p", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
+          "successResponse": { "result": true, "message": "Your order has been placed successfully", "orderId": "ORD-90842" },
+          "errorResponse": { "result": false, "message": "Failed to place order" }
+        }
+      ],
+      "rules": [
+        { "id": "PO-BR22", "text": "The order endpoint must be selected from the final service type, not from browser route history." },
+        { "id": "PO-BR23", "text": "A repeated click or retry must not create a duplicate order or duplicate charge." },
+        { "id": "PO-BR24", "text": "Success is recognized only from an explicit successful backend result with an order identifier." },
+        { "id": "PO-BR25", "text": "Failed submission must preserve enough state for a safe retry without re-entering the full order." }
+      ],
+      "gaps": [
+        { "id": "PO-G15", "severity": "critical", "text": "No explicit idempotency key or duplicate-order protection is visible across payment-session creation and final order submission." },
+        { "id": "PO-G16", "severity": "high", "text": "Closing a successful result navigates to Internet Packages without explicitly clearing Redux cart data or po_order_state, which can carry stale values into the next order." },
+        { "id": "PO-G17", "severity": "medium", "text": "Network failure uses a generic message and does not distinguish an order that failed from one whose response was lost after backend creation." }
+      ],
+      "acceptance": [
+        { "id": "PO-AC29", "text": "Place Order is disabled immediately after the first click and remains blocked until a terminal response." },
+        { "id": "PO-AC30", "text": "One logical order produces at most one charge and one backend order across retries." },
+        { "id": "PO-AC31", "text": "An ambiguous network result can be reconciled by idempotency key or order-status lookup before retry." },
+        { "id": "PO-AC32", "text": "Success clears all completed-order state before starting another order." },
+        { "id": "PO-AC33", "text": "Failure keeps the reviewed order intact and exposes a safe Retry action." }
+      ],
+      "codeReferences": [
+        "src/containers/Order/create/rent/steps/PocketWifiOrderSummery.jsx",
+        "src/services/apiClient.js",
+        "src/helpers/compute-service.js"
+      ]
+    }
+  ]
+}

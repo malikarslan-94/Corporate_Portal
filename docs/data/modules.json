@@ -1,7 +1,13 @@
 {
   "modules": [
     { "id": "dashboard", "label": "Dashboard", "status": "planned", "flows": [] },
-    { "id": "order", "label": "Place Order", "status": "planned", "flows": [] },
+    {
+      "id": "order",
+      "label": "Place Order",
+      "status": "documented",
+      "data": "./data/place-order.json",
+      "flows": ["PO-F01", "PO-F02", "PO-F03", "PO-F04", "PO-F05", "PO-F06", "PO-F07", "PO-F08"]
+    },
     { "id": "bulktopup", "label": "Bulk Topup", "status": "planned", "flows": [] },
     {
       "id": "users",
