@@ -1,15 +1,15 @@
 {
   "module": {
-    "id": "order",
-    "label": "Place Order",
+    "id": "orders",
+    "label": "Order History",
     "title": "Order Management",
-    "mapTitle": "Place Order lifecycle",
+    "mapTitle": "Order History management lifecycle",
     "documentId": "PRFS-ORD-001",
-    "version": "0.1",
+    "version": "0.2",
     "status": "Draft from current implementation",
-    "route": "/admin/placeorder",
+    "route": "/admin/orders",
     "updated": "2026-10-19",
-    "summary": "Place an internet package order for a selected corporate customer, from customer context and plan search through service configuration, fulfilment, payment and final order result."
+    "summary": "Find and manage existing corporate orders, including lifecycle status, order details, fulfilment data, device assignment, eSIM activation and customer transactions."
   },
   "legend": [
     { "type": "user", "label": "Operator action" },
@@ -20,557 +20,575 @@
   ],
   "map": {
     "nodes": [
-      { "key": "f01", "flowId": "ORD-F01", "type": "user", "x": 10, "y": 12 },
-      { "key": "f02", "flowId": "ORD-F02", "type": "system", "x": 36, "y": 12 },
-      { "key": "f03", "flowId": "ORD-F03", "type": "user", "x": 63, "y": 12 },
-      { "key": "f04", "flowId": "ORD-F04", "type": "system", "x": 90, "y": 12 },
-      { "key": "fulfilment", "title": "Physical device fulfilment?", "subtitle": "Branch by product, service and selected device", "type": "decision", "x": 72, "y": 39 },
-      { "key": "f05", "flowId": "ORD-F05", "type": "user", "x": 45, "y": 57 },
-      { "key": "f06", "flowId": "ORD-F06", "type": "user", "x": 18, "y": 78 },
-      { "key": "f07", "flowId": "ORD-F07", "type": "user", "x": 72, "y": 78 },
-      { "key": "f08", "flowId": "ORD-F08", "type": "outcome", "x": 90, "y": 90 }
+      { "key": "f01", "flowId": "ORD-F01", "type": "system", "x": 12, "y": 12 },
+      { "key": "list", "title": "Order list ready", "subtitle": "Latest open and pending orders", "type": "outcome", "x": 38, "y": 12 },
+      { "key": "f02", "flowId": "ORD-F02", "type": "user", "x": 65, "y": 12 },
+      { "key": "f03", "flowId": "ORD-F03", "type": "user", "x": 90, "y": 12 },
+      { "key": "selected", "title": "Existing order selected", "subtitle": "Choose an order-level action", "type": "decision", "x": 50, "y": 38 },
+      { "key": "f04", "flowId": "ORD-F04", "type": "user", "x": 10, "y": 63 },
+      { "key": "f05", "flowId": "ORD-F05", "type": "user", "x": 30, "y": 63 },
+      { "key": "f06", "flowId": "ORD-F06", "type": "user", "x": 50, "y": 63 },
+      { "key": "f07", "flowId": "ORD-F07", "type": "system", "x": 70, "y": 63 },
+      { "key": "f08", "flowId": "ORD-F08", "type": "system", "x": 90, "y": 63 },
+      { "key": "f09", "flowId": "ORD-F09", "type": "system", "x": 50, "y": 88 }
     ],
     "edges": [
-      { "from": "f01", "to": "f02", "label": "customer ready" },
-      { "from": "f02", "to": "f03", "label": "plan selected" },
-      { "from": "f03", "to": "f04", "label": "configuration valid" },
-      { "from": "f04", "to": "fulfilment", "label": "charges ready" },
-      { "from": "fulfilment", "to": "f05", "label": "Pocket WiFi purchase/rental" },
-      { "from": "fulfilment", "to": "f07", "label": "SIM, eSIM, top-up or assigned device" },
-      { "from": "f05", "to": "f06", "label": "self pickup" },
-      { "from": "f05", "to": "f07", "label": "delivery address" },
-      { "from": "f06", "to": "f07", "label": "location selected" },
-      { "from": "f07", "to": "f08", "label": "confirm order" }
+      { "from": "f01", "to": "list", "label": "success" },
+      { "from": "list", "to": "f02", "label": "search/filter" },
+      { "from": "f02", "to": "f03", "label": "results" },
+      { "from": "f03", "to": "selected", "label": "select order" },
+      { "from": "selected", "to": "f04", "label": "details" },
+      { "from": "selected", "to": "f05", "label": "status" },
+      { "from": "selected", "to": "f06", "label": "edit" },
+      { "from": "selected", "to": "f07", "label": "devices" },
+      { "from": "selected", "to": "f08", "label": "eSIM" },
+      { "from": "selected", "to": "f09", "label": "transactions" }
     ]
   },
   "flows": [
     {
       "id": "ORD-F01",
-      "title": "Start order and establish customer context",
-      "shortTitle": "Start & select customer",
+      "title": "Open Order History and load latest orders",
+      "shortTitle": "Load latest orders",
       "status": "as-is",
-      "evidence": "AS-IS traced in active Place Order implementation",
+      "evidence": "AS-IS traced in active OrdersPage implementation",
       "actor": "Authenticated Corporate Portal Operator",
-      "trigger": "Select Place Order, open /admin/placeorder, or arrive from Support with a customer prefill.",
-      "summary": "Restore or select the customer and source that every later plan, device, charge and payment request must use.",
+      "trigger": "Select Order History or navigate to /admin/orders.",
+      "summary": "Load the latest open and pending orders within the operator's partner, group and source scope.",
       "preconditions": [
-        "The operator is authenticated and has access to Place Order.",
-        "The active login contains a source and corporate operator identity.",
-        "A support-assisted entry may have written cs_placeorder_prefill to sessionStorage."
+        "The operator is authenticated and authorized to view Order History.",
+        "The login state contains user_id, group_id and source.",
+        "The order service can enforce the same corporate scope sent by the client."
       ],
-      "outcome": "A verified userProfile, userId and source are stored in the working order and an end-user token is requested.",
+      "outcome": "The table contains the latest scoped orders, or a distinct empty/error state is shown.",
       "steps": [
-        { "type": "system", "title": "Initialize order state", "detail": "Prefer Support prefill, otherwise restore po_order_state, otherwise use the logged-in customer context when available." },
-        { "type": "user", "title": "Choose source and customer", "detail": "The operator types at least three valid characters or selects a returned customer." },
-        { "type": "system", "title": "Search scoped users", "detail": "Debounce for 500 ms and request matching Jane users with source, group_id and corp_id." },
-        { "type": "decision", "title": "Exact customer found?", "detail": "Only an exact normalized userId match becomes the active userProfile." },
-        { "type": "system", "title": "Persist safe context", "detail": "Write source, user profile, user ID, device type, travel details and promo code to po_order_state." },
-        { "type": "outcome", "title": "Enable package search", "detail": "The customer is ready and the end-user token lookup runs for the selected source." }
+        { "type": "user", "title": "Open Order History", "detail": "The /admin/orders route renders OrdersPage and the Order Management interface." },
+        { "type": "system", "title": "Build scoped request", "detail": "Use the logged-in user as partner_id and include group_id, source and order_date selection." },
+        { "type": "system", "title": "Request latest orders", "detail": "Search the recent date window for order statuses Open (0) and Pending (8)." },
+        { "type": "decision", "title": "Request successful?", "detail": "On success replace the View list; on failure retain an explicit error rather than treating it as an empty result." },
+        { "type": "outcome", "title": "Render order table", "detail": "Show the returned orders with status, dates, plan, product and available actions." }
       ],
       "branches": [
-        { "label": "Support prefill", "tone": "success", "detail": "Use cs_placeorder_prefill and mirror its customer context into po_order_state." },
-        { "label": "Saved order context", "tone": "neutral", "detail": "Restore the persisted subset when no newer support prefill exists." },
-        { "label": "No exact user", "tone": "danger", "detail": "Keep package search disabled and show that the user profile does not exist." },
-        { "label": "Source changes", "tone": "warning", "detail": "Clear customer, travel, promo and deposit data to prevent cross-source ordering." }
+        { "label": "Orders returned", "tone": "success", "detail": "Render only the backend-authorized result." },
+        { "label": "Valid empty result", "tone": "neutral", "detail": "Show No orders found for the current latest-order criteria." },
+        { "label": "Technical failure", "tone": "danger", "detail": "Show an error and Retry without replacing the failure with an empty table." },
+        { "label": "Unauthorized", "tone": "danger", "detail": "Deny the route and do not expose order data." }
       ],
       "apis": [
         {
-          "name": "getAllJaneUsers",
+          "name": "getLatestOrders",
           "method": "POST",
-          "path": "/jane/v2/getAllJaneUsers",
-          "purpose": "Find customers within the operator's source and corporate scope.",
-          "request": { "source": "urwifi", "search": "traveller@example.com", "group_id": 7, "corp_id": "corporate@example.com" },
-          "successResponse": { "users": [{ "userId": "traveller@example.com", "appUserId": "10442", "origin": "SG", "source": "urwifi" }] },
-          "errorResponse": { "status": { "result": false }, "message": "Unable to find users" }
+          "path": "/order/getOrders2",
+          "purpose": "Load recent open and pending orders for the authenticated corporate scope.",
+          "request": { "partner_id": "corporate@example.com", "group_id": 7, "source": "urwifi", "select_attribute": "order_date", "start_date": "2026-09-19", "end_date": "2026-10-19", "order_status": [0, 8] },
+          "successResponse": { "status": { "result": true }, "orders": [{ "order_id": "ORD-90842", "user_id": "traveller@example.com", "order_status": 0, "device_type": "D", "plan_code": "PW-JP-10" }] },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to load orders" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR01", "text": "Every order must be bound to one verified customer and one approved source before package selection." },
-        { "id": "ORD-BR02", "text": "Changing source invalidates previously selected customer, travel and promotional context." },
-        { "id": "ORD-BR03", "text": "Support prefill must never bypass the same customer and authorization checks used by direct entry." }
+        { "id": "ORD-BR01", "text": "Order results must be restricted to the authenticated operator's authorized partner, group and source scope." },
+        { "id": "ORD-BR02", "text": "The default latest list includes only Open and Pending orders in the configured recent date window." },
+        { "id": "ORD-BR03", "text": "Backend authorization must not rely on partner_id supplied by the browser alone." }
       ],
       "gaps": [
-        { "id": "ORD-G01", "severity": "high", "text": "cs_placeorder_prefill is read but not removed in the active Rent flow, so stale support context can be replayed on a later visit." },
-        { "id": "ORD-G02", "severity": "high", "text": "The component performs a client-side login redirect, but route-level authorization and backend Place Order permission enforcement are not demonstrated here." }
+        { "id": "ORD-G01", "severity": "high", "text": "Fetch failures are logged to the console but no visible error or Retry state is set in OrdersPage." },
+        { "id": "ORD-G02", "severity": "high", "text": "Route-level and action-level permission checks are not demonstrated in the reviewed Order History components." }
       ],
       "acceptance": [
-        { "id": "ORD-AC01", "text": "An unauthenticated or unauthorized operator cannot open the route or retrieve customer data." },
-        { "id": "ORD-AC02", "text": "Package search stays disabled until an exact customer profile is selected." },
-        { "id": "ORD-AC03", "text": "Changing source clears all customer-specific order state." },
-        { "id": "ORD-AC04", "text": "A consumed support prefill is cleared or explicitly marked consumed." }
+        { "id": "ORD-AC01", "text": "Only orders in the operator's authorized scope are returned and displayed." },
+        { "id": "ORD-AC02", "text": "Loading, empty, failure and unauthorized states are visually distinct." },
+        { "id": "ORD-AC03", "text": "A failed latest-order request can be retried without reloading the portal." },
+        { "id": "ORD-AC04", "text": "Unauthorized operators cannot retrieve orders by changing client request fields." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/PlaceOrder.jsx",
-        "src/containers/Order/create/rent/Rent.jsx",
-        "src/containers/Order/create/rent/steps/OrderInfo.jsx",
-        "src/services/endUserToken.js"
+        "src/containers/Order/OrdersPage.jsx",
+        "src/order-management-ui/index.jsx",
+        "src/services/object.js"
       ]
     },
     {
       "id": "ORD-F02",
-      "title": "Search and select an internet package",
-      "shortTitle": "Search & select plan",
+      "title": "Search and filter order history",
+      "shortTitle": "Search & filter orders",
       "status": "as-is",
-      "evidence": "AS-IS traced in InternetPackages",
+      "evidence": "AS-IS traced in OrdersPage and OrderFilters",
       "actor": "Corporate Portal Operator",
-      "trigger": "A customer is selected and the operator chooses destination, dates, product type and optional promo code.",
-      "summary": "Load eligible partner or local plans for the customer and destination, validate promotions, filter the result and select one package.",
+      "trigger": "Choose status, date range and sort field, then select Search.",
+      "summary": "Search existing orders by lifecycle status and date window while preserving corporate scope.",
       "preconditions": [
-        "A verified customer profile and source exist.",
-        "A travel country is selected.",
-        "The plan search is not already running."
+        "Order History is open.",
+        "The operator has permission to search orders.",
+        "Start date, end date and status form a valid search request."
       ],
-      "outcome": "The selected package is stored in order.package and navigation continues to Cart Service.",
+      "outcome": "The View list is replaced by orders matching the submitted filters.",
       "steps": [
-        { "type": "user", "title": "Enter trip criteria", "detail": "Choose destination, optional date range for SIM/eSIM, required dates for Pocket WiFi, product type and optional promo code." },
-        { "type": "decision", "title": "Partner plan group?", "detail": "Eligible partner groups load partner plans; other operators use local plans scoped by user, destination and source." },
-        { "type": "decision", "title": "Promo supplied?", "detail": "Load promo details and, for non-global promos, validate the selected country before plan search." },
-        { "type": "system", "title": "Load eligible plans", "detail": "Request plans with origin, destination, customer, source and partner context." },
-        { "type": "user", "title": "Filter plans", "detail": "Filter by Pocket WiFi, SIM or eSIM, plan category, plan name or code, and load more results." },
-        { "type": "user", "title": "Select package", "detail": "Store the package; the Rent effect navigates to /admin/placeorder/pocketwificartservice." }
+        { "type": "user", "title": "Choose filters", "detail": "Select order status, start date, end date and order-date or travel-start sorting." },
+        { "type": "system", "title": "Apply source rules", "detail": "ChargeGo hides unsupported lifecycle statuses and defaults to All; other sources default to Open." },
+        { "type": "system", "title": "Build search request", "detail": "Merge filters into the scoped base request and convert order_status to a number." },
+        { "type": "system", "title": "Search orders", "detail": "POST getOrders2 for the active View mode." },
+        { "type": "decision", "title": "Result successful?", "detail": "Replace the list on success; otherwise clear or retain data according to a defined failure policy." },
+        { "type": "outcome", "title": "Show filtered result", "detail": "Mark the page searched and render the matching orders." }
       ],
       "branches": [
-        { "label": "Global promo", "tone": "success", "detail": "Proceed directly to the plan search using the promo code." },
-        { "label": "Country-restricted promo", "tone": "warning", "detail": "Continue only when validatePromoCountry marks the selected country eligible." },
-        { "label": "No plans", "tone": "neutral", "detail": "Show a distinct no-packages result and allow the operator to change criteria." },
-        { "label": "API failure", "tone": "danger", "detail": "Stop the loading state and surface the returned error message." }
+        { "label": "All statuses", "tone": "neutral", "detail": "Use status 10 as the backend sentinel for all supported order states." },
+        { "label": "ChargeGo source", "tone": "neutral", "detail": "Hide lifecycle states that ChargeGo fulfilment never reaches." },
+        { "label": "No matches", "tone": "neutral", "detail": "Show a valid empty result without reporting a technical error." },
+        { "label": "Search failure", "tone": "danger", "detail": "Preserve the submitted filters and provide Retry." }
       ],
       "apis": [
         {
-          "name": "localPlans",
+          "name": "getOrders",
           "method": "POST",
-          "path": "/jane2/api/apidispatcher",
-          "purpose": "Load destination-eligible plans for the selected customer.",
-          "request": { "requestType": "localPlans", "travelingTo": ["JP"], "origin": "SG", "promoCode": "TRAVEL10", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi", "partnerId": "corporate@example.com", "platform": "crm" },
-          "successResponse": { "status": { "result": true }, "deposit": 100, "plans": [{ "planCode": "PW-JP-10", "planName": "Japan Pocket WiFi", "deviceType": "D", "currency": "SGD" }] },
-          "errorResponse": { "status": { "result": false }, "message": "No eligible plans found" }
-        },
-        {
-          "name": "validatePromoCountry",
-          "method": "POST",
-          "path": "/jane2/api/apidispatcher",
-          "purpose": "Validate a non-global promo against the selected destination.",
-          "request": { "requestType": "validatePromoCountry", "countryList": [{ "countryCode": "JP" }], "promoCode": "TRAVEL10", "source": "urwifi" },
-          "successResponse": { "status": { "result": true }, "countryList": [{ "countryCode": "JP", "promo": "TRUE" }] },
-          "errorResponse": { "status": { "result": false }, "message": "Promo is not valid for this country" }
+          "path": "/order/getOrders2",
+          "purpose": "Search scoped orders by lifecycle status and date range.",
+          "request": { "partner_id": "corporate@example.com", "group_id": 7, "source": "urwifi", "order_status": 2, "start_date": "2026-10-01", "end_date": "2026-10-19", "select_attribute": "order_date", "email": "", "promo_code": "" },
+          "successResponse": { "status": { "result": true }, "orders": [{ "order_id": "ORD-90710", "order_status": 2, "order_date": "2026-10-10" }] },
+          "errorResponse": { "status": { "result": false }, "message": "Order search failed" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR04", "text": "Plan eligibility must use the selected customer's identity, origin, destination, source and approved partner scope." },
-        { "id": "ORD-BR05", "text": "A country-restricted promo cannot affect charges until the destination validation succeeds." },
-        { "id": "ORD-BR06", "text": "Pocket WiFi requires valid travel dates before service configuration can complete; SIM/eSIM dates may be optional at search time." }
+        { "id": "ORD-BR04", "text": "Start date must not be after end date." },
+        { "id": "ORD-BR05", "text": "Source-specific status options must match lifecycle states supported by the backend." },
+        { "id": "ORD-BR06", "text": "Every search must retain partner, group and source scope regardless of UI filters." }
       ],
       "gaps": [
-        { "id": "ORD-G03", "severity": "medium", "text": "Initial priority-plan loading can show plans before destination criteria are submitted; the eligibility contract between priority plans and later local-plan search should be explicit." },
-        { "id": "ORD-G04", "severity": "medium", "text": "A hard-coded operator exception for aziz@dealer.com changes partner scoping and should be replaced with a documented policy or permission." }
+        { "id": "ORD-G03", "severity": "high", "text": "User and Promo search branches exist in OrdersPage, but their tabs are commented out in the active order-management-ui, so those flows are currently unreachable." },
+        { "id": "ORD-G04", "severity": "medium", "text": "The UI does not visibly validate start date against end date before sending the request." }
       ],
       "acceptance": [
-        { "id": "ORD-AC05", "text": "Search cannot run without a verified customer and destination." },
-        { "id": "ORD-AC06", "text": "Only plans eligible for the chosen customer, source and destination are selectable." },
-        { "id": "ORD-AC07", "text": "An invalid promo cannot be applied or carried into pricing." },
-        { "id": "ORD-AC08", "text": "Selecting a package moves exactly once to Cart Service with the chosen plan preserved." }
+        { "id": "ORD-AC05", "text": "Invalid date ranges are blocked with field-level guidance." },
+        { "id": "ORD-AC06", "text": "The result matches status, dates, sort field and authorized corporate scope." },
+        { "id": "ORD-AC07", "text": "A failed search preserves filters and shows an actionable error." },
+        { "id": "ORD-AC08", "text": "Hidden source-specific statuses cannot be submitted by manipulating the browser." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/InternetPackages.jsx",
-        "src/services/general.services.js",
-        "src/containers/Order/create/rent/InternetPackageCard.jsx"
+        "src/containers/Order/OrdersPage.jsx",
+        "src/order-management-ui/components/OrderFilters.jsx",
+        "src/order-management-ui/constants/orderConstants.js"
       ]
     },
     {
       "id": "ORD-F03",
-      "title": "Configure service, variation and device",
-      "shortTitle": "Configure cart service",
+      "title": "Explore, sort, paginate and export orders",
+      "shortTitle": "Explore & export",
       "status": "as-is",
-      "evidence": "AS-IS traced in PocketWifiCartService",
+      "evidence": "AS-IS traced in order-management-ui table configuration",
       "actor": "Corporate Portal Operator",
-      "trigger": "Select an internet package.",
-      "summary": "Load plan variations and customer devices, then choose service type, data size, duration, dates, quantity and an existing device when the flow requires one.",
+      "trigger": "Use table search, sorting, pagination or CSV export after orders load.",
+      "summary": "Explore the loaded authorized result and export the current order dataset with spreadsheet-safe columns.",
       "preconditions": [
-        "A package with planCode and product type is stored in the Redux cart.",
-        "The selected customer and source are still available.",
-        "Travel details exist when the product requires them."
+        "An order result has completed loading.",
+        "The operator may view the result.",
+        "CSV export additionally requires an approved export permission."
       ],
-      "outcome": "A valid variation and optional selectedDevice are stored in orderData and the operator can continue to Plan Summary.",
+      "outcome": "The visible rows or downloaded CSV reflect the authorized order result.",
       "steps": [
-        { "type": "system", "title": "Load variations", "detail": "Request getPlanVariations using planCode and product type for Pocket WiFi." },
-        { "type": "system", "title": "Load customer devices", "detail": "Request devices using userId, appUserId and source." },
-        { "type": "system", "title": "Group service choices", "detail": "Normalize variations into rent, buy, top-up, SIM and eSIM service groups with data sizes and durations." },
-        { "type": "user", "title": "Choose service configuration", "detail": "Select service type, data size, duration, quantity and travel dates as required." },
-        { "type": "decision", "title": "Existing device required?", "detail": "Top-up requires a compatible customer device; lookup by device ID also warns when ownership differs." },
-        { "type": "system", "title": "Store cart configuration", "detail": "Write variation and selectedDevice into the shared order object and enable Next only when required data is complete." }
+        { "type": "user", "title": "Choose a table operation", "detail": "Search within loaded orders, sort supported columns, change page or request CSV export." },
+        { "type": "system", "title": "Transform loaded rows", "detail": "SupportTableAdapter applies table search, sorting and pagination to the current result." },
+        { "type": "decision", "title": "Export requested?", "detail": "Use the dedicated csvColumns list rather than rendering action buttons or JSX values." },
+        { "type": "system", "title": "Prepare file", "detail": "Export identifiers, product, dates, type, charges, plan code and platform." },
+        { "type": "outcome", "title": "Update or download", "detail": "Render the table result or download support-orders.csv." }
       ],
       "branches": [
-        { "label": "SIM/eSIM purchase", "tone": "neutral", "detail": "A selected variation is sufficient; travel details are normalized to today's date after selection." },
-        { "label": "Top-up", "tone": "warning", "detail": "Require a compatible device and an available top-up variation." },
-        { "label": "Different owner", "tone": "warning", "detail": "Allow continuation but generate a new order_id and show a device-ownership warning." },
-        { "label": "No services", "tone": "danger", "detail": "Show the no-services state and keep Next disabled." }
+        { "label": "Client search", "tone": "neutral", "detail": "Filter only the orders already returned by the scoped server request." },
+        { "label": "CSV export", "tone": "success", "detail": "Exclude action controls and use plain field values." },
+        { "label": "Export denied", "tone": "danger", "detail": "Do not prepare or download order data." }
       ],
-      "apis": [
-        {
-          "name": "getPlanVariations",
-          "method": "POST",
-          "path": "/jane2/api/apidispatcher",
-          "purpose": "Load service variations for the selected plan.",
-          "request": { "requestType": "getPlanVariations", "planCode": "PW-JP-10", "productType": "D" },
-          "successResponse": { "status": { "result": true }, "plan": [{ "variationId": "711", "packageCode": "PW-JP-10-5GB", "productType": "D", "serviceType": "R", "dataSize": 5, "days": 10, "desc": "GB" }] },
-          "errorResponse": { "status": { "result": false }, "message": "No service variations available" }
-        },
-        {
-          "name": "getDevices",
-          "method": "POST",
-          "path": "/jane2/api/getdevices",
-          "purpose": "Load devices belonging to the selected customer for top-up or plan assignment.",
-          "request": { "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
-          "successResponse": { "devices": [{ "device_id": "PW12345678", "device_type": "D", "provider": "Yoowifi" }] },
-          "errorResponse": { "status": { "result": false }, "message": "Unable to load devices" }
-        }
-      ],
+      "apis": [],
       "rules": [
-        { "id": "ORD-BR07", "text": "The selected variation must belong to the selected plan and match the intended product and service type." },
-        { "id": "ORD-BR08", "text": "Top-up requires a compatible device and available variation for that device type and provider." },
-        { "id": "ORD-BR09", "text": "Pocket WiFi Next remains disabled until every travel leg has location and required dates." }
+        { "id": "ORD-BR07", "text": "Table operations and exports may contain only the already-authorized order result." },
+        { "id": "ORD-BR08", "text": "Export must exclude action controls and fields not approved for offline use." }
       ],
       "gaps": [
-        { "id": "ORD-G05", "severity": "high", "text": "A device that belongs to another user is allowed to proceed after only a warning; the approved ownership and reassignment policy is not defined." },
-        { "id": "ORD-G06", "severity": "high", "text": "Directly refreshing a later route can leave Redux orderData incomplete because the persisted po_order_state excludes package, variation, selected device, delivery and payment data." }
+        { "id": "ORD-G05", "severity": "medium", "text": "OrdersPage implements server CSV handlers, but the active UI uses SupportTableAdapter client export and does not call onDownloadCsv." },
+        { "id": "ORD-G06", "severity": "high", "text": "An independent export permission check is not visible in the active table configuration." }
       ],
       "acceptance": [
-        { "id": "ORD-AC09", "text": "Next remains disabled until the selected service has a valid variation and all product-specific requirements." },
-        { "id": "ORD-AC10", "text": "Top-up cannot continue with an incompatible or unavailable device variation." },
-        { "id": "ORD-AC11", "text": "A later-step refresh recovers the complete order safely or returns the operator to the earliest valid step." },
-        { "id": "ORD-AC12", "text": "Cross-user device use follows an explicit authorization rule and creates an auditable event." }
+        { "id": "ORD-AC09", "text": "Search, sort and pagination never introduce orders outside the server-authorized result." },
+        { "id": "ORD-AC10", "text": "CSV contains the intended plain-value columns and no action UI." },
+        { "id": "ORD-AC11", "text": "Operators without export permission cannot download order data." },
+        { "id": "ORD-AC12", "text": "Exported row count and filters are clear to the operator." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/PocketWifiCartService.jsx",
-        "src/hooks/useAddPlan.jsx",
-        "src/services/general.services.js"
+        "src/order-management-ui/index.jsx",
+        "src/components/SupportTableAdapter.js",
+        "src/containers/Order/OrdersPage.jsx"
       ]
     },
     {
       "id": "ORD-F04",
-      "title": "Resolve payment gateway and calculate charges",
-      "shortTitle": "Review plan & charges",
+      "title": "Inspect complete order details and close eligible orders",
+      "shortTitle": "View order details",
       "status": "as-is",
-      "evidence": "AS-IS traced in PocketWifiPlanSummery",
+      "evidence": "AS-IS traced in OrderDetailModal",
       "actor": "Corporate Portal Operator",
-      "trigger": "Continue from Cart Service with a valid variation.",
-      "summary": "Resolve the customer's payment gateway, calculate either purchase-order or selected-device plan charges, and show the authoritative total before fulfilment.",
+      "trigger": "Select an Order ID in the table.",
+      "summary": "Review customer, order, travel, plan, shipping, variation and assigned-device data; Mask orders can also be closed.",
       "preconditions": [
-        "The order contains customer, package, variation and travel details.",
-        "A selectedDevice is present only for a plan/top-up flow.",
-        "The backend can resolve a payment gateway for the customer."
+        "An order row is selected.",
+        "The row contains the detail, variation and orderDetails data returned by the list API.",
+        "Close Order requires lifecycle permission and an eligible Mask order."
       ],
-      "outcome": "pgwType, amount and any discount are stored; the flow branches to fulfilment or directly to Order Summary.",
+      "outcome": "The operator understands the complete order context, or an eligible order is moved to Closed status.",
       "steps": [
-        { "type": "system", "title": "Resolve gateway", "detail": "Request the customer's payment gateway using encrypted userId and appUserId data." },
-        { "type": "decision", "title": "Selected device present?", "detail": "Use plan charges for an assigned device; otherwise use order charges for a new purchase or rental." },
-        { "type": "system", "title": "Calculate charges", "detail": "Send plan, package, variation, travel, promo, source and customer fields to the appropriate charge endpoint." },
-        { "type": "system", "title": "Store pricing", "detail": "Persist authoritative charges and discount in orderData." },
-        { "type": "user", "title": "Review summary", "detail": "Check product type, data, duration, device or quantity, promo and total." },
-        { "type": "decision", "title": "Fulfilment required?", "detail": "New Pocket WiFi without a selected device goes to Shipping Option; other products and assigned-device flows go to Order Summary." }
+        { "type": "user", "title": "Open order", "detail": "Select the linked Order ID." },
+        { "type": "system", "title": "Render order context", "detail": "Show customer identity, status, charges, travel, plan, tracking, fulfilment and remarks." },
+        { "type": "system", "title": "Render nested records", "detail": "Show variation rows and assigned device/SIM/eSIM records when present." },
+        { "type": "decision", "title": "Mask order?", "detail": "Only order_type mask displays Close Order in the active modal." },
+        { "type": "user", "title": "Close eligible order", "detail": "Confirm the operational close action when policy permits." },
+        { "type": "outcome", "title": "Patch status", "detail": "On backend success update the order status to Closed (6) in the visible lists." }
       ],
       "branches": [
-        { "label": "Assigned device", "tone": "neutral", "detail": "POST plan/charges and bypass physical fulfilment." },
-        { "label": "New Pocket WiFi", "tone": "warning", "detail": "POST order/charges, then select fulfilment unless default pickup is explicitly chosen." },
-        { "label": "Skip shipping", "tone": "neutral", "detail": "Set the fixed Emerald Hill office as self pickup with zero shipping charge and continue to Order Summary." },
-        { "label": "Pricing failure", "tone": "danger", "detail": "Show an error state and do not allow confirmation with an unknown total." }
+        { "label": "Standard order", "tone": "neutral", "detail": "Details are read-only and the operator dismisses the modal." },
+        { "label": "Mask order", "tone": "warning", "detail": "Close Order is available and submits status 6." },
+        { "label": "Close failure", "tone": "danger", "detail": "Keep the modal open, preserve the original status and show the backend message." }
       ],
       "apis": [
         {
-          "name": "getPaymentGateway",
+          "name": "closeOrder",
           "method": "POST",
-          "path": "/payment-services/payments/get-pgw",
-          "purpose": "Resolve the payment gateway configured for the selected customer.",
-          "request": { "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi", "data": "<encrypted userId and appUserId>" },
-          "successResponse": { "data": { "pgw": "2c2p" } },
-          "errorResponse": { "status": { "result": false }, "message": "Payment gateway unavailable" }
-        },
-        {
-          "name": "calculateOrderCharges",
-          "method": "POST",
-          "path": "/yw-services/api/order/charges",
-          "purpose": "Calculate charges when no existing device is selected.",
-          "request": { "orderType": "rent", "promoCode": "TRAVEL10", "quantity": 1, "startDate": "2026-11-05", "endDate": "2026-11-14", "planCode": "PW-JP-10", "packageCode": "PW-JP-10-5GB", "variationId": 711, "travelingTo": ["JP"], "pgw": "2c2p", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
-          "successResponse": { "charges": { "charges": 89.9, "discount": 10 } },
-          "errorResponse": { "status": { "result": false }, "message": "Unable to calculate charges" }
+          "path": "/order/closeOrder",
+          "purpose": "Close an eligible order and move it to lifecycle status 6.",
+          "request": { "order_id": "ORD-90842", "order_status": 6 },
+          "successResponse": { "status": { "result": true }, "message": "Order closed" },
+          "errorResponse": { "status": { "result": false }, "message": "Order cannot be closed" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR10", "text": "The backend-calculated amount is authoritative; the browser must not calculate or override the payable total." },
-        { "id": "ORD-BR11", "text": "The charge request and final order request must describe the same customer, plan, variation, quantity, travel details and promo." },
-        { "id": "ORD-BR12", "text": "Physical fulfilment applies only where the selected product and service require delivery or pickup." }
+        { "id": "ORD-BR09", "text": "Order details must display authoritative backend values without silently substituting data from another order." },
+        { "id": "ORD-BR10", "text": "Close Order is allowed only for lifecycle states and order types approved by policy." },
+        { "id": "ORD-BR11", "text": "A close transition must be audited and applied only after backend success." }
       ],
       "gaps": [
-        { "id": "ORD-G07", "severity": "medium", "text": "The charge hook does not list the complete order configuration in its callback dependencies, so changes beyond pgw or selectedDevice may not automatically trigger recalculation." },
-        { "id": "ORD-G08", "severity": "medium", "text": "Skip Shipping applies one hard-coded office location; availability by customer origin, product and operating hours is not validated in this step." }
+        { "id": "ORD-G07", "severity": "medium", "text": "The modal supports returnTracking, but OrdersPage does not fetch or pass a return tracking value." },
+        { "id": "ORD-G08", "severity": "medium", "text": "The close-order loading and alert props are not wired from OrdersPage, so the modal cannot show reliable progress or result feedback." }
       ],
       "acceptance": [
-        { "id": "ORD-AC13", "text": "The plan summary never displays a confirmable total until the gateway and charge calls succeed." },
-        { "id": "ORD-AC14", "text": "Any price-affecting change causes charges to be recalculated before confirmation." },
-        { "id": "ORD-AC15", "text": "The fulfilment branch matches product type, service type and selected-device state." },
-        { "id": "ORD-AC16", "text": "Default pickup is available only when the fixed location is valid for the order." }
+        { "id": "ORD-AC13", "text": "Selecting an Order ID shows details for that exact order." },
+        { "id": "ORD-AC14", "text": "Variation and device records render only when present and preserve their association with the order." },
+        { "id": "ORD-AC15", "text": "Close is unavailable for ineligible order types and states." },
+        { "id": "ORD-AC16", "text": "Close shows progress, success or failure and changes the row only after backend success." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/PocketWifiPlanSummery.jsx",
-        "src/helpers/compute-service.js",
-        "src/services/apiClient.js"
+        "src/order-management-ui/components/modals/OrderDetailModal.jsx",
+        "src/containers/Order/OrdersPage.jsx",
+        "src/order-management-ui/constants/orderConstants.js"
       ]
     },
     {
       "id": "ORD-F05",
-      "title": "Choose shipping or self pickup",
-      "shortTitle": "Choose fulfilment",
+      "title": "Cancel or revert an order",
+      "shortTitle": "Cancel / revert order",
       "status": "as-is",
-      "evidence": "AS-IS traced in PocketWifiShippingOption",
-      "actor": "Corporate Portal Operator",
-      "trigger": "A new physical Pocket WiFi order continues from Plan Summary.",
-      "summary": "Load available fulfilment methods, then route self pickup to location selection or store a delivery method and address for final review.",
+      "evidence": "AS-IS traced in confirmation and OrdersPage handlers",
+      "actor": "Operator with Order Status permission",
+      "trigger": "Select the status action for an order row and confirm.",
+      "summary": "Move Open or Pending orders to Cancelled, or restore a cancelled order to Open, with confirmation and backend-authoritative status.",
       "preconditions": [
-        "The order needs physical fulfilment.",
-        "The customer profile contains origin, userId and appUserId.",
-        "Plan charges have already been calculated."
+        "The selected order exists in the operator's authorized scope.",
+        "The operator may perform the requested lifecycle transition.",
+        "The current order status is authoritative and eligible."
       ],
-      "outcome": "The order contains either delivery details or proceeds to the Self Pickup flow.",
+      "outcome": "The order status changes in all visible lists only after backend success.",
       "steps": [
-        { "type": "system", "title": "Load shipping rates", "detail": "Request available methods with customer country, userId, appUserId and source." },
-        { "type": "system", "title": "Normalize options", "detail": "Put self pickup first and exclude it for buy-device variations." },
-        { "type": "user", "title": "Select fulfilment", "detail": "Choose self pickup or an available paid/free shipping method." },
-        { "type": "decision", "title": "Self pickup?", "detail": "Navigate to pickup-location selection without requiring an address." },
-        { "type": "user", "title": "Select delivery address", "detail": "For non-self shipping, select a saved address before Next is enabled." },
-        { "type": "system", "title": "Store delivery", "detail": "Persist shipping type, address ID/data, currency and rate, then open Order Summary." }
+        { "type": "decision", "title": "Current status?", "detail": "Open (0) and Pending (8) show Cancel; the intended revert transition applies to Cancelled (7)." },
+        { "type": "user", "title": "Choose action", "detail": "Select Cancel or Revert on the order row." },
+        { "type": "system", "title": "Request confirmation", "detail": "Display a modal before changing the order." },
+        { "type": "system", "title": "Submit transition", "detail": "POST cancelOrder with status 7 for cancel or status 0 for revert." },
+        { "type": "decision", "title": "Backend success?", "detail": "Patch View and User lists only on a successful response." },
+        { "type": "outcome", "title": "Show final status", "detail": "Render Cancelled or Open and record the lifecycle event." }
       ],
       "branches": [
-        { "label": "Self pickup", "tone": "neutral", "detail": "Continue to ORD-F06 and choose an active pickup location." },
-        { "label": "Delivery", "tone": "success", "detail": "Require an address and save the authoritative shipping rate." },
-        { "label": "Buy device", "tone": "warning", "detail": "Filter self pickup from the returned methods." },
-        { "label": "No methods", "tone": "danger", "detail": "Show the empty state and prevent progress." }
+        { "label": "Cancel confirmed", "tone": "warning", "detail": "Set order_status to 7." },
+        { "label": "Revert confirmed", "tone": "neutral", "detail": "Set order_status to 0." },
+        { "label": "Confirmation dismissed", "tone": "neutral", "detail": "Send no request and leave the order unchanged." },
+        { "label": "Transition rejected", "tone": "danger", "detail": "Keep the authoritative old status and show the backend reason." }
       ],
       "apis": [
         {
-          "name": "getShippingRate",
+          "name": "cancelOrder",
           "method": "POST",
-          "path": "/jane2/api/apidispatcher",
-          "purpose": "Load fulfilment options and shipping rates for the customer origin.",
-          "request": { "requestType": "getShippingRate", "countryCode": "SG", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
-          "successResponse": { "shipping": [{ "type": "self", "rate": 0 }, { "type": "standard", "rate": 8.5 }], "currency": { "currencyCode": "SGD" } },
-          "errorResponse": { "status": { "result": false }, "message": "No shipping options available" }
+          "path": "/order/cancelOrder",
+          "purpose": "Cancel an order or revert a cancelled order to Open.",
+          "request": { "order_id": "ORD-90842", "order_status": 7 },
+          "successResponse": { "status": { "result": true }, "message": "Order status updated" },
+          "errorResponse": { "status": { "result": false }, "message": "Transition is not allowed" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR13", "text": "Non-self fulfilment requires a valid address belonging to the selected customer." },
-        { "id": "ORD-BR14", "text": "The shipping rate and currency stored on the order must match the selected backend option." },
-        { "id": "ORD-BR15", "text": "Buy-device flows may not use self pickup under the current implementation rule." }
+        { "id": "ORD-BR12", "text": "Only Open and Pending orders may be cancelled through this flow." },
+        { "id": "ORD-BR13", "text": "Only Cancelled orders may be reverted to Open through this flow." },
+        { "id": "ORD-BR14", "text": "Lifecycle transitions require confirmation, backend validation and an audit record." }
       ],
       "gaps": [
-        { "id": "ORD-G09", "severity": "medium", "text": "The reason self pickup is excluded for buy-device flows is encoded in the UI but not expressed as an authoritative backend rule." },
-        { "id": "ORD-G10", "severity": "medium", "text": "Shipping-rate failure is presented as an empty options state, so operators cannot distinguish unavailable fulfilment from a technical error." }
+        { "id": "ORD-G09", "severity": "critical", "text": "The active UI shows Revert for every status other than Open or Pending, not only Cancelled, so Shipped, Returned and Closed orders can present an invalid transition." },
+        { "id": "ORD-G10", "severity": "medium", "text": "The processing state is never set around cancel/revert calls, so action buttons do not reliably disable or show progress." }
       ],
       "acceptance": [
-        { "id": "ORD-AC17", "text": "Only backend-returned fulfilment options can be selected." },
-        { "id": "ORD-AC18", "text": "A delivery method cannot continue without a valid selected customer address." },
-        { "id": "ORD-AC19", "text": "Self pickup never carries a delivery address or delivery charge." },
-        { "id": "ORD-AC20", "text": "Technical rate failures are distinguishable from a valid no-options result and can be retried." }
+        { "id": "ORD-AC17", "text": "Cancel appears only for Open and Pending orders." },
+        { "id": "ORD-AC18", "text": "Revert appears only for Cancelled orders." },
+        { "id": "ORD-AC19", "text": "A pending transition cannot be submitted twice." },
+        { "id": "ORD-AC20", "text": "Failure preserves the previous status and displays the backend reason." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/PocketWifiShippingOption.jsx",
-        "src/containers/Order/create/rent/steps/DeliveryAddress.jsx",
-        "src/services/general.services.js"
+        "src/order-management-ui/index.jsx",
+        "src/order-management-ui/components/ConfirmDialog.jsx",
+        "src/containers/Order/OrdersPage.jsx"
       ]
     },
     {
       "id": "ORD-F06",
-      "title": "Select a self-pickup location",
-      "shortTitle": "Select pickup location",
+      "title": "Edit fulfilment data and apply charge controls",
+      "shortTitle": "Edit order & charges",
       "status": "as-is",
-      "evidence": "AS-IS traced in PocketWifiSelfPickup",
-      "actor": "Corporate Portal Operator",
-      "trigger": "Choose self pickup from Shipping Option.",
-      "summary": "Load active pickup locations, filter them by country, select one location and store it as zero-delivery-charge fulfilment.",
+      "evidence": "AS-IS traced in EditOrderModal",
+      "actor": "Operator with Edit Order or Charge Control permission",
+      "trigger": "Select Edit for an existing order.",
+      "summary": "Update tracking, travel dates, remarks, device count and location, or apply separately authorized suppression and charge/refund controls.",
       "preconditions": [
-        "Self pickup is an allowed shipping option for the order.",
-        "The selected customer has userId and appUserId.",
-        "Pickup locations are available from the backend."
+        "An order row is selected.",
+        "The latest authoritative order record is available.",
+        "Financial controls require separate permission from ordinary order editing."
       ],
-      "outcome": "delivery.shippingType is self and delivery.location contains the selected active pickup location.",
+      "outcome": "Approved order fields or charge-control fields are saved and the visible row reflects backend success.",
       "steps": [
-        { "type": "system", "title": "Load all pickup locations", "detail": "Request locations with cityId 0, simEnabled false and the selected customer identifiers." },
-        { "type": "system", "title": "Filter active locations", "detail": "Keep locations whose active flag is 1 and derive a unique country list." },
-        { "type": "user", "title": "Choose country", "detail": "Select the pickup country; reload locations for that country." },
-        { "type": "user", "title": "Choose location", "detail": "Review address and operating details and choose one location." },
-        { "type": "decision", "title": "Both selections present?", "detail": "Block Next until country and location are selected." },
-        { "type": "system", "title": "Store pickup", "detail": "Save country, location and shippingType self, then navigate to Order Summary." }
+        { "type": "user", "title": "Open Edit Order", "detail": "Load tracking, dates, remarks, device quantity and location from the selected row." },
+        { "type": "user", "title": "Change operational fields", "detail": "Choose courier/tracking values, travel dates, remarks, device count or order location." },
+        { "type": "decision", "title": "Operational or financial update?", "detail": "Save Order submits orderFields; Apply Suppress / Charges submits a separate chaRef object." },
+        { "type": "system", "title": "Validate permission and fields", "detail": "Verify dates, quantity, reason, amount, currency and allowed action on the server." },
+        { "type": "system", "title": "Update order", "detail": "POST updateOrderDetails with order_id and the selected field set." },
+        { "type": "outcome", "title": "Patch or confirm", "detail": "Update visible operational fields after success and show an auditable charge-control result." }
       ],
       "branches": [
-        { "label": "Origin match", "tone": "neutral", "detail": "The implementation attempts to preselect a location matching the customer's origin." },
-        { "label": "Country changed", "tone": "neutral", "detail": "Clear the old location and request the new country's locations." },
-        { "label": "No active locations", "tone": "danger", "detail": "Keep Next disabled and explain that no pickup location is available." },
-        { "label": "Load failure", "tone": "danger", "detail": "Show an error and preserve the ability to go back to fulfilment selection." }
+        { "label": "Save operational fields", "tone": "success", "detail": "Patch the View and User rows after backend success." },
+        { "label": "Suppress charges/notifications", "tone": "warning", "detail": "Require permission and a reason before applying." },
+        { "label": "Charge or refund", "tone": "warning", "detail": "Validate amount, currency and downstream payment result." },
+        { "label": "Validation/API failure", "tone": "danger", "detail": "Keep edits, show field-level guidance and do not patch the row." }
       ],
       "apis": [
         {
-          "name": "getPickupLocations",
+          "name": "updateOrderDetails",
           "method": "POST",
-          "path": "/jane2/api/apidispatcher",
-          "purpose": "Load active pickup locations, optionally filtered by country.",
-          "request": { "requestType": "getPickupLocations", "source": "crm", "cityId": 0, "simEnabled": false, "countryCode": "SG", "userId": "traveller@example.com", "appUserId": "10442", "allLocations": true },
-          "successResponse": { "locations": [{ "locationCode": "SG-YOOWIFI-EMERALDHILL", "locationCountryCode": "SG", "locationCountry": "Singapore", "addressOne": "166, Emerald Hill Road", "active": "1" }] },
-          "errorResponse": { "status": { "result": false }, "message": "Failed to load pickup locations" }
+          "path": "/order/updateOrderDetails",
+          "purpose": "Update operational fields or authorized charge-control fields for an order.",
+          "request": { "order_id": "ORD-90842", "tracking_url": "https://www.singpost.com/track-items", "tracking_no": "SG123456789", "start_date": "2026-11-05", "end_date": "2026-11-14", "remarks": "Customer confirmed", "no_of_devices": 1, "order_location": "Singapore" },
+          "successResponse": { "status": { "result": true }, "message": "Order updated" },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to update order" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR16", "text": "Only active pickup locations returned for the selected country may be attached to the order." },
-        { "id": "ORD-BR17", "text": "Self pickup has zero shipping charge unless the backend explicitly returns a pickup fee." },
-        { "id": "ORD-BR18", "text": "Changing country invalidates the previously selected location." }
+        { "id": "ORD-BR15", "text": "Operational edits and financial controls require distinct permissions and audit events." },
+        { "id": "ORD-BR16", "text": "End date cannot precede start date and device quantity must be a positive whole number." },
+        { "id": "ORD-BR17", "text": "Charge suppression, notification suppression, charges and refunds require an explicit reason and backend authorization." }
       ],
       "gaps": [
-        { "id": "ORD-G11", "severity": "high", "text": "Initial origin matching sets selectedLocation but does not set selectedCountry, while form validation requires both; the apparent auto-selection cannot continue." },
-        { "id": "ORD-G12", "severity": "medium", "text": "Pickup API failures use browser alert messages instead of an inline, retryable state." }
+        { "id": "ORD-G11", "severity": "critical", "text": "The same modal exposes ordinary order edits and sensitive suppress/charge/refund controls without a visible separate permission boundary." },
+        { "id": "ORD-G12", "severity": "high", "text": "EditOrderModal initializes local form state only on component creation; selecting a different order later can retain stale values from the first opened order." },
+        { "id": "ORD-G13", "severity": "medium", "text": "Suppress/charge updates do not patch the row or show a wired result state in OrdersPage." }
       ],
       "acceptance": [
-        { "id": "ORD-AC21", "text": "Origin auto-selection sets a consistent country and location pair." },
-        { "id": "ORD-AC22", "text": "Changing country always clears a location from the previous country." },
-        { "id": "ORD-AC23", "text": "Only an active location in the selected country can be saved." },
-        { "id": "ORD-AC24", "text": "A failed location request shows an inline Retry action without losing the order." }
+        { "id": "ORD-AC21", "text": "Each modal opening reflects the currently selected order, never stale local state." },
+        { "id": "ORD-AC22", "text": "Invalid dates, quantities and financial inputs are blocked before submission." },
+        { "id": "ORD-AC23", "text": "Financial controls require independent backend permission and a mandatory reason." },
+        { "id": "ORD-AC24", "text": "Success and failure are visible and the row changes only after backend success." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/PocketWifiSelfPickup.jsx",
-        "src/services/general.services.js",
-        "src/services/host.services.js"
+        "src/order-management-ui/components/modals/EditOrderModal.jsx",
+        "src/containers/Order/OrdersPage.jsx",
+        "src/services/object.js"
       ]
     },
     {
       "id": "ORD-F07",
-      "title": "Review order and select payment",
-      "shortTitle": "Review & choose payment",
+      "title": "Assign, swap or bulk-assign devices",
+      "shortTitle": "Assign / swap devices",
       "status": "as-is",
-      "evidence": "AS-IS traced in PocketWifiOrderSummery",
-      "actor": "Corporate Portal Operator",
-      "trigger": "Arrive at Order Summary after pricing and any required fulfilment selection.",
-      "summary": "Review the full customer, plan, travel, device, fulfilment and total context, select an eligible payment card, and optionally suppress charges when permitted.",
+      "evidence": "AS-IS traced in AssignDevice and bulkAssignDeviceFlow",
+      "actor": "Operator with Device Assignment permission",
+      "trigger": "Select Assign Device(s) for an order.",
+      "summary": "Assign one device, swap an existing device, or process multiple device IDs from text, ICCID range or XLSX while preventing already-assigned devices.",
       "preconditions": [
-        "The order has authoritative charges and payment gateway type.",
-        "Required physical fulfilment data exists.",
-        "The selected customer identity remains unchanged."
+        "The order is eligible for device assignment.",
+        "Device type and required order fulfilment fields are known.",
+        "The operator has assignment permission for the order and inventory scope."
       ],
-      "outcome": "The operator has reviewed a coherent order and selected a payment path ready for submission.",
+      "outcome": "Eligible devices are assigned or swapped, result rows are shown, the order status is recalculated and the visible row is patched.",
       "steps": [
-        { "type": "system", "title": "Load payment cards", "detail": "Request encrypted customer cards and keep supported 2c2p and corporate-card entries." },
-        { "type": "system", "title": "Build review summary", "detail": "Show user, source, destination, dates, plan, variation, quantity/device, promo, fulfilment and total payable." },
-        { "type": "user", "title": "Select payment", "detail": "Choose a supported saved card or corporate card." },
-        { "type": "decision", "title": "Suppress charges allowed?", "detail": "The current userProfile supCharges value initializes an optional suppression path." },
-        { "type": "user", "title": "Confirm accuracy", "detail": "Review the final data before Place Order starts payment and submission." },
-        { "type": "outcome", "title": "Ready to submit", "detail": "paymentCard, total and order configuration are ready for ORD-F08." }
+        { "type": "user", "title": "Choose assignment mode", "detail": "Select Single Device, Swap Device or Multiple Devices." },
+        { "type": "user", "title": "Provide device IDs", "detail": "Enter one device, old/new swap IDs, up to 30 comma-separated IDs, an ICCID range or an XLSX file." },
+        { "type": "system", "title": "Normalize assignment request", "detail": "Build the order, customer, device, shipping and flow context; swaps identify both old and new devices." },
+        { "type": "system", "title": "Check assignment", "detail": "Call isDeviceAssigned before each assign/swap operation." },
+        { "type": "decision", "title": "Device available?", "detail": "Reject already-assigned devices; otherwise call UpdateAssignDevices." },
+        { "type": "outcome", "title": "Patch order and results", "detail": "Use the returned recalculated order for single/swap and show per-device bulk results." }
       ],
       "branches": [
-        { "label": "2c2p card", "tone": "success", "detail": "Create a payment session before placing the order." },
-        { "label": "Corporate card", "tone": "neutral", "detail": "Use pgw crpc and the corporate-card invoice marker." },
-        { "label": "Suppress charges", "tone": "warning", "detail": "Skip payment session and place the order with supCharges true." },
-        { "label": "Adyen", "tone": "danger", "detail": "The page states that Adyen is currently unavailable for this service." }
+        { "label": "Single assign", "tone": "success", "detail": "Assign one normalized device ID and log a shipped-device audit action." },
+        { "label": "Swap", "tone": "warning", "detail": "Assign the replacement while sending swap_device and suppressing promo re-charge." },
+        { "label": "Bulk", "tone": "neutral", "detail": "Process text, range or XLSX IDs sequentially and pause after each batch of 50." },
+        { "label": "Already assigned", "tone": "danger", "detail": "Do not update the order and return a per-device failure message." }
       ],
       "apis": [
         {
-          "name": "getUserCardsEnc",
+          "name": "isDeviceAssigned",
           "method": "POST",
           "path": "/jane2/api/apidispatcher",
-          "purpose": "Load encrypted saved payment methods for the selected customer.",
-          "request": { "requestType": "getUserCardsEnc", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
-          "successResponse": { "status": { "result": true }, "data": "<encrypted card array containing cardId and pgw>" },
-          "errorResponse": { "status": { "result": false }, "message": "Unable to load payment cards" }
+          "purpose": "Prevent assignment of a device that is already in use.",
+          "request": { "requestType": "isDeviceAssigned", "source": "crm", "deviceId": "892610012345678" },
+          "successResponse": { "status": { "result": false }, "message": "Device is available" },
+          "errorResponse": { "status": { "result": true }, "message": "Device is already assigned" }
+        },
+        {
+          "name": "UpdateAssignDevices",
+          "method": "POST",
+          "path": "/order/UpdateAssignDevices",
+          "purpose": "Assign or swap a device and return the recalculated order.",
+          "request": { "request_source": "urwifi", "user_id": "traveller@example.com", "app_user_id": "10442", "device_id": "892610012345678", "order_id": "ORD-90842", "no_of_devices": 1, "order_type": "rent", "device_type": "D", "shipping_type": "self", "flow_type": "normal", "token_id": "1234", "card_id": 123 },
+          "successResponse": { "status": { "result": true }, "message": "Device assigned", "order": [{ "order_id": "ORD-90842", "order_status": 1 }] },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to assign device" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR19", "text": "The final review must match the exact data that will be sent in the order request." },
-        { "id": "ORD-BR20", "text": "Suppress Charges and corporate-card payment require explicit operator permission and an audit record." },
-        { "id": "ORD-BR21", "text": "Only payment methods supported by the resolved gateway may be selected." }
+        { "id": "ORD-BR18", "text": "A device must pass availability, type, inventory-scope and order-eligibility checks before assignment." },
+        { "id": "ORD-BR19", "text": "A swap must identify the current and replacement device and must not apply the original promo twice." },
+        { "id": "ORD-BR20", "text": "Every assignment and swap requires an audit trail tied to the acting operator." }
       ],
       "gaps": [
-        { "id": "ORD-G13", "severity": "critical", "text": "The UI exposes charge suppression based on userProfile.supCharges; server-side authorization for this financially sensitive action is not demonstrated in the reviewed flow." },
-        { "id": "ORD-G14", "severity": "high", "text": "Adyen can be resolved as pgwType but the summary declares it unavailable, leaving affected customers without an in-flow recovery path." }
+        { "id": "ORD-G14", "severity": "high", "text": "The assignment request includes fallback token_id 1234 and card_id 123 when authoritative payment context is unavailable." },
+        { "id": "ORD-G15", "severity": "high", "text": "Bulk assignment deliberately skips one audit-history call per device, so its audit completeness depends on backend logging not shown here." },
+        { "id": "ORD-G16", "severity": "medium", "text": "Bulk result completion and validation paths are complex and do not visibly provide a safe resume mechanism after interruption." }
       ],
       "acceptance": [
-        { "id": "ORD-AC25", "text": "The displayed final summary and submission payload agree on all price- and fulfilment-affecting fields." },
-        { "id": "ORD-AC26", "text": "Unsupported payment methods cannot be selected or submitted." },
-        { "id": "ORD-AC27", "text": "Charge suppression is enforced by backend permission and recorded in the order audit trail." },
-        { "id": "ORD-AC28", "text": "An unavailable gateway provides a clear alternative or stops before Place Order is enabled." }
+        { "id": "ORD-AC25", "text": "An already-assigned, incompatible or out-of-scope device cannot be assigned." },
+        { "id": "ORD-AC26", "text": "Swap records both device IDs and updates the order exactly once." },
+        { "id": "ORD-AC27", "text": "Bulk input validates count, headers, identifiers and per-device results before reporting completion." },
+        { "id": "ORD-AC28", "text": "Every successful single, swap and bulk assignment is attributable to the acting operator." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/PocketWifiOrderSummery.jsx",
-        "src/services/encryption.js",
-        "src/services/general.services.js"
+        "src/containers/Order/allorder/ordercomponents/AssignDevice.jsx",
+        "src/containers/Order/bulk-assign-export/bulkAssignDeviceFlow.js",
+        "src/containers/Order/OrdersPage.jsx"
       ]
     },
     {
       "id": "ORD-F08",
-      "title": "Create payment session and place the order",
-      "shortTitle": "Submit order & result",
+      "title": "Activate an eligible eSIM order",
+      "shortTitle": "Activate eSIM",
       "status": "as-is",
-      "evidence": "AS-IS traced in PocketWifiOrderSummery",
-      "actor": "Corporate Portal Operator and Yoowifi order services",
-      "trigger": "Select Place Order from the reviewed Order Summary.",
-      "summary": "Create a payment session when required, submit the correct purchase or plan-order payload, then present one unambiguous success or failure result.",
+      "evidence": "AS-IS traced in active table action and API dispatcher",
+      "actor": "Operator with eSIM Activation permission",
+      "trigger": "Select Activate on an Open buy-eSIM order and confirm.",
+      "summary": "Activate an eligible eSIM for the selected order using its source and customer identifiers.",
       "preconditions": [
-        "The final review is complete and payment path is valid.",
-        "The order amount and fulfilment data are current.",
-        "The operator has not already submitted this order."
+        "The order status is Open (0).",
+        "The order type is buyesim/buy-esim or device_type is E.",
+        "The order contains order_id, user_id, app_user_id and request_source."
       ],
-      "outcome": "A successful response returns an order ID; a failure preserves the order for safe correction or retry.",
+      "outcome": "The backend activates the eSIM and the order presents a visible terminal result.",
       "steps": [
-        { "type": "user", "title": "Place order", "detail": "Open a blocking loading modal and prevent another submission." },
-        { "type": "decision", "title": "Payment session required?", "detail": "Corporate card and authorized charge suppression skip the external payment-session call." },
-        { "type": "system", "title": "Create payment session", "detail": "Encrypt customer, amount, card, currency and return URL; store the returned invoiceNo." },
-        { "type": "decision", "title": "Top-up service?", "detail": "Submit /order/plan for serviceType T; otherwise submit /order for purchase/rental." },
-        { "type": "system", "title": "Place authoritative order", "detail": "Send customer, plan, variation, dates, promo, payment, quantity/device and fulfilment fields." },
-        { "type": "outcome", "title": "Show final result", "detail": "Display success with orderId or an error message; closing success returns to Internet Packages." }
+        { "type": "system", "title": "Evaluate eligibility", "detail": "Show Activate only for Open eSIM orders." },
+        { "type": "user", "title": "Request activation", "detail": "Select Activate beside the Order ID." },
+        { "type": "system", "title": "Confirm action", "detail": "Require confirmation before sending the request." },
+        { "type": "system", "title": "Activate eSIM", "detail": "Dispatch orderId, source, userId, appUserId and platform crm." },
+        { "type": "decision", "title": "Activation successful?", "detail": "Show success and refresh/patch state; otherwise show the backend reason and allow safe retry." }
       ],
       "branches": [
-        { "label": "Payment session fails", "tone": "danger", "detail": "Show a payment initialization error and do not call the order endpoint." },
-        { "label": "Purchase or rental", "tone": "neutral", "detail": "POST /yw-services/api/order with fulfilment fields when applicable." },
-        { "label": "Top-up or assigned plan", "tone": "neutral", "detail": "POST /yw-services/api/order/plan with device and order identifiers." },
-        { "label": "Order succeeds", "tone": "success", "detail": "Show returned order ID, then return to the package step when the modal closes." },
-        { "label": "Order fails", "tone": "danger", "detail": "Keep the order available and show either the backend message or a network error." }
+        { "label": "Eligible", "tone": "success", "detail": "Confirm and submit the activation request." },
+        { "label": "Ineligible", "tone": "neutral", "detail": "Do not render the Activate action." },
+        { "label": "Activation failure", "tone": "danger", "detail": "Keep the current order state and show an actionable error." }
       ],
       "apis": [
         {
-          "name": "createPaymentSession",
+          "name": "activateEsim",
           "method": "POST",
-          "path": "/payment-services/payments/process/payment-session",
-          "purpose": "Create the invoice/payment session required before a chargeable order.",
-          "request": { "appUserId": "10442", "userId": "traveller@example.com", "data": "<encrypted amount, cardId, returnUrl and currency>" },
-          "successResponse": { "data": { "invoiceNo": "INV-20261019-001" } },
-          "errorResponse": { "status": { "result": false }, "message": "Failed to initialize payment session" }
-        },
-        {
-          "name": "placeOrder",
-          "method": "POST",
-          "path": "/yw-services/api/order",
-          "purpose": "Create a new purchase or rental order.",
-          "request": { "orderType": "rent", "promoCode": "TRAVEL10", "cardId": 88, "quantity": 1, "startDate": "2026-11-05", "endDate": "2026-11-14", "planCode": "PW-JP-10", "packageCode": "PW-JP-10-5GB", "variationId": 711, "invoiceNo": "INV-20261019-001", "shippingType": "self", "locationCode": "SG-YOOWIFI-EMERALDHILL", "shippingCharges": 0, "travelDetails": [{ "countryCode": "JP", "startDate": "2026-11-05", "endDate": "2026-11-14" }], "supCharges": false, "pgw": "2c2p", "userId": "traveller@example.com", "appUserId": "10442", "source": "urwifi" },
-          "successResponse": { "result": true, "message": "Your order has been placed successfully", "orderId": "ORD-90842" },
-          "errorResponse": { "result": false, "message": "Failed to place order" }
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Activate the eSIM associated with an eligible order.",
+          "request": { "requestType": "activateEsim", "orderId": "ORD-ESIM-204", "source": "urwifi", "userId": "traveller@example.com", "appUserId": "10442", "platform": "crm" },
+          "successResponse": { "status": { "result": true }, "message": "eSIM activated" },
+          "errorResponse": { "status": { "result": false }, "message": "eSIM activation failed" }
         }
       ],
       "rules": [
-        { "id": "ORD-BR22", "text": "The order endpoint must be selected from the final service type, not from browser route history." },
-        { "id": "ORD-BR23", "text": "A repeated click or retry must not create a duplicate order or duplicate charge." },
-        { "id": "ORD-BR24", "text": "Success is recognized only from an explicit successful backend result with an order identifier." },
-        { "id": "ORD-BR25", "text": "Failed submission must preserve enough state for a safe retry without re-entering the full order." }
+        { "id": "ORD-BR21", "text": "Activate is available only for an Open order positively identified as eSIM." },
+        { "id": "ORD-BR22", "text": "Activation must be idempotent and audited against order, customer and operator." },
+        { "id": "ORD-BR23", "text": "A successful activation must update or refresh the visible order state." }
       ],
       "gaps": [
-        { "id": "ORD-G15", "severity": "critical", "text": "No explicit idempotency key or duplicate-order protection is visible across payment-session creation and final order submission." },
-        { "id": "ORD-G16", "severity": "high", "text": "Closing a successful result navigates to Internet Packages without explicitly clearing Redux cart data or po_order_state, which can carry stale values into the next order." },
-        { "id": "ORD-G17", "severity": "medium", "text": "Network failure uses a generic message and does not distinguish an order that failed from one whose response was lost after backend creation." }
+        { "id": "ORD-G17", "severity": "high", "text": "OrdersPage awaits activateEsim but ignores the response and does not patch the order, refresh the list or show success/failure." },
+        { "id": "ORD-G18", "severity": "medium", "text": "The processing state is not set during activation, so repeat clicks are not reliably blocked." }
       ],
       "acceptance": [
-        { "id": "ORD-AC29", "text": "Place Order is disabled immediately after the first click and remains blocked until a terminal response." },
-        { "id": "ORD-AC30", "text": "One logical order produces at most one charge and one backend order across retries." },
-        { "id": "ORD-AC31", "text": "An ambiguous network result can be reconciled by idempotency key or order-status lookup before retry." },
-        { "id": "ORD-AC32", "text": "Success clears all completed-order state before starting another order." },
-        { "id": "ORD-AC33", "text": "Failure keeps the reviewed order intact and exposes a safe Retry action." }
+        { "id": "ORD-AC29", "text": "Activate appears only for eligible Open eSIM orders." },
+        { "id": "ORD-AC30", "text": "A pending activation cannot be submitted twice." },
+        { "id": "ORD-AC31", "text": "Success or failure is visible and the row is refreshed or patched from authoritative data." },
+        { "id": "ORD-AC32", "text": "Retry cannot create a duplicate activation." }
       ],
       "codeReferences": [
-        "src/containers/Order/create/rent/steps/PocketWifiOrderSummery.jsx",
-        "src/services/apiClient.js",
-        "src/helpers/compute-service.js"
+        "src/order-management-ui/index.jsx",
+        "src/order-management-ui/components/ConfirmDialog.jsx",
+        "src/containers/Order/OrdersPage.jsx",
+        "src/services/general.services.js"
+      ]
+    },
+    {
+      "id": "ORD-F09",
+      "title": "View transactions for an order customer",
+      "shortTitle": "View transactions",
+      "status": "as-is",
+      "evidence": "AS-IS traced in UserTransactionsModal",
+      "actor": "Operator with Transaction View permission",
+      "trigger": "Select Transactions beside a User ID when the portal source allows it.",
+      "summary": "Load and display the selected order customer's transaction history with source normalization.",
+      "preconditions": [
+        "The selected order contains user_id and app_user_id.",
+        "The active portal source is not urwifi under the current visibility rule.",
+        "The operator may view the customer's financial transaction data."
+      ],
+      "outcome": "The modal shows the customer's transaction rows or a clear empty/error state.",
+      "steps": [
+        { "type": "decision", "title": "Transactions visible?", "detail": "The active UI shows the action when source is not urwifi and the view is not hidden." },
+        { "type": "user", "title": "Open transactions", "detail": "Select the transaction action beside the customer User ID." },
+        { "type": "system", "title": "Normalize source", "detail": "Use a supported request_source value or fall back to urwifi." },
+        { "type": "system", "title": "Request transactions", "detail": "Dispatch userId, appUserId and source to getUserTrans." },
+        { "type": "outcome", "title": "Render transaction table", "detail": "Show email, order, product, charge, currency, type, date and amount." }
+      ],
+      "branches": [
+        { "label": "Transactions returned", "tone": "success", "detail": "Render the returned financial records." },
+        { "label": "Valid empty result", "tone": "neutral", "detail": "Show No transactions found." },
+        { "label": "Technical failure", "tone": "danger", "detail": "Show an error and Retry instead of an empty result." },
+        { "label": "Permission denied", "tone": "danger", "detail": "Do not display the action or expose transaction data." }
+      ],
+      "apis": [
+        {
+          "name": "getUserTrans",
+          "method": "POST",
+          "path": "/jane2/api/apidispatcher",
+          "purpose": "Load transaction history for the selected order customer.",
+          "request": { "requestType": "getUserTrans", "userId": "traveller@example.com", "appUserId": "10442", "source": "tune" },
+          "successResponse": { "status": { "result": true }, "transactions": [{ "orderId": "ORD-90842", "chargeId": "CH-701", "currency": "MYR", "transType": "charge", "amount": 120.5 }] },
+          "errorResponse": { "status": { "result": false }, "message": "Unable to load transactions" }
+        }
+      ],
+      "rules": [
+        { "id": "ORD-BR24", "text": "Transaction visibility requires explicit financial-data permission, not only a source-name check." },
+        { "id": "ORD-BR25", "text": "The requested customer must belong to the selected authorized order." },
+        { "id": "ORD-BR26", "text": "Transaction failure must not be represented as a valid empty history." }
+      ],
+      "gaps": [
+        { "id": "ORD-G19", "severity": "critical", "text": "The visible transaction authorization rule is source !== urwifi rather than a demonstrated role or permission check." },
+        { "id": "ORD-G20", "severity": "medium", "text": "Transaction API failures are logged but the modal receives an empty list, making failure indistinguishable from no transactions." },
+        { "id": "ORD-G21", "severity": "medium", "text": "A deposit-refund handler exists in OrdersPage, but its active table column is commented out, leaving that workflow dormant and undocumented as an available action." }
+      ],
+      "acceptance": [
+        { "id": "ORD-AC33", "text": "Only an operator with transaction-view permission can open or retrieve the data." },
+        { "id": "ORD-AC34", "text": "The request customer is verified against the selected order and authorized corporate scope." },
+        { "id": "ORD-AC35", "text": "Loading, empty and failure states are distinct in the modal." },
+        { "id": "ORD-AC36", "text": "Sensitive transaction fields are limited to those required for support operations." }
+      ],
+      "codeReferences": [
+        "src/order-management-ui/components/modals/UserTransactionsModal.jsx",
+        "src/order-management-ui/index.jsx",
+        "src/containers/Order/OrdersPage.jsx",
+        "src/services/general.services.js"
       ]
     }
   ]

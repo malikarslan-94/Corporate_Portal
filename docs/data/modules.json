@@ -1,13 +1,7 @@
 {
   "modules": [
     { "id": "dashboard", "label": "Dashboard", "status": "planned", "flows": [] },
-    {
-      "id": "order",
-      "label": "Place Order",
-      "status": "documented",
-      "data": "./data/order-management.json",
-      "flows": ["ORD-F01", "ORD-F02", "ORD-F03", "ORD-F04", "ORD-F05", "ORD-F06", "ORD-F07", "ORD-F08"]
-    },
+    { "id": "order", "label": "Place Order", "status": "planned", "flows": [] },
     { "id": "bulktopup", "label": "Bulk Topup", "status": "planned", "flows": [] },
     {
       "id": "users",
@@ -18,7 +12,13 @@
     },
     { "id": "devices", "label": "Devices", "status": "planned", "flows": [] },
     { "id": "inventory", "label": "Inventory", "status": "planned", "flows": [] },
-    { "id": "orders", "label": "Order History", "status": "planned", "flows": [] },
+    {
+      "id": "orders",
+      "label": "Order History",
+      "status": "documented",
+      "data": "./data/order-management.json",
+      "flows": ["ORD-F01", "ORD-F02", "ORD-F03", "ORD-F04", "ORD-F05", "ORD-F06", "ORD-F07", "ORD-F08", "ORD-F09"]
+    },
     { "id": "support", "label": "Support", "status": "planned", "flows": [] },
     { "id": "statement", "label": "Transactions", "status": "planned", "flows": [] },
     { "id": "corpcard", "label": "Corporate Card", "status": "planned", "flows": [] },
