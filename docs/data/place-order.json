@@ -52,7 +52,7 @@
       "evidence": "AS-IS traced in active Place Order implementation",
       "actor": "Authenticated Corporate Portal Operator",
       "trigger": "Select Place Order, open /admin/placeorder, or arrive from Support with a customer prefill.",
-      "summary": "Restore or select the customer and source that every later plan, device, charge and payment request must use.",
+      "summary": "Restore the operator's assigned source, allow only urwifi operators to change it, and select the customer that every later plan, device, charge and payment request must use.",
       "preconditions": [
         "The operator is authenticated and has access to Place Order.",
         "The active login contains a source and corporate operator identity.",
@@ -61,13 +61,16 @@
       "outcome": "A verified userProfile, userId and source are stored in the working order and an end-user token is requested.",
       "steps": [
         { "type": "system", "title": "Initialize order state", "detail": "Prefer Support prefill, otherwise restore po_order_state, otherwise use the logged-in customer context when available." },
-        { "type": "user", "title": "Choose source and customer", "detail": "The operator types at least three valid characters or selects a returned customer." },
+        { "type": "decision", "title": "Logged-in source is urwifi?", "detail": "Show the Source dropdown only when the authenticated operator's source is urwifi; otherwise keep the assigned source internally and hide the selector." },
+        { "type": "user", "title": "Choose customer", "detail": "An urwifi operator may first choose a source. Every operator then types at least three valid characters or selects a returned customer." },
         { "type": "system", "title": "Search scoped users", "detail": "Debounce for 500 ms and request matching Jane users with source, group_id and corp_id." },
         { "type": "decision", "title": "Exact customer found?", "detail": "Only an exact normalized userId match becomes the active userProfile." },
         { "type": "system", "title": "Persist safe context", "detail": "Write source, user profile, user ID, device type, travel details and promo code to po_order_state." },
         { "type": "outcome", "title": "Enable package search", "detail": "The customer is ready and the end-user token lookup runs for the selected source." }
       ],
       "branches": [
+        { "label": "urwifi operator", "tone": "success", "detail": "Show the Source dropdown and allow selection from the operator's permitted sources." },
+        { "label": "Other source", "tone": "neutral", "detail": "Hide the Source dropdown and use the authenticated operator's assigned source for customer search and downstream requests." },
         { "label": "Support prefill", "tone": "success", "detail": "Use cs_placeorder_prefill and mirror its customer context into po_order_state." },
         { "label": "Saved order context", "tone": "neutral", "detail": "Restore the persisted subset when no newer support prefill exists." },
         { "label": "No exact user", "tone": "danger", "detail": "Keep package search disabled and show that the user profile does not exist." },
@@ -85,7 +88,7 @@
         }
       ],
       "rules": [
-        { "id": "PO-BR01", "text": "Every order must be bound to one verified customer and one approved source before package selection." },
+        { "id": "PO-BR01", "text": "Every order must be bound to one verified customer and one approved source before package selection; only an authenticated urwifi operator may see and use the Source dropdown." },
         { "id": "PO-BR02", "text": "Changing source invalidates previously selected customer, travel and promotional context." },
         { "id": "PO-BR03", "text": "Support prefill must never bypass the same customer and authorization checks used by direct entry." }
       ],
@@ -96,7 +99,7 @@
       "acceptance": [
         { "id": "PO-AC01", "text": "An unauthenticated or unauthorized operator cannot open the route or retrieve customer data." },
         { "id": "PO-AC02", "text": "Package search stays disabled until an exact customer profile is selected." },
-        { "id": "PO-AC03", "text": "Changing source clears all customer-specific order state." },
+        { "id": "PO-AC03", "text": "The Source dropdown is visible only when the authenticated operator source is urwifi; all other operators keep their assigned source without a selector, and any permitted source change clears customer-specific order state." },
         { "id": "PO-AC04", "text": "A consumed support prefill is cleared or explicitly marked consumed." }
       ],
       "codeReferences": [
